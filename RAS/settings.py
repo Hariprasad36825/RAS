@@ -84,10 +84,13 @@ DATABASES = {
         'NAME': 'RAS',
         'USER': 'root',
         'PASSWORD': 'Mysql@hari#2001',
-        'HOST': 'localhost',
+        'HOST': '127.0.0.1',
         'PORT': '3306',
     }
 }
+
+db_from_env = dj_database_url.config(conn_max_age=500)
+DATABASES['default'].update(db_from_env)
 
 
 # Password validation
