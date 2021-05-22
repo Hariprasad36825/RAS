@@ -28,5 +28,5 @@ urlpatterns = [
     path('', admin.site.urls),
     path('api/', include(router.urls)),
     path('api/', include('Restaurant.urls'))
-    re_path('.*', TemplateView.as_view(template_name = 'index.html'))
+    re_path(r'^.*', TemplateView.as_view(template_name='index.html'))
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
