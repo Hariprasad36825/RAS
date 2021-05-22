@@ -1,29 +1,4 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
-# dependencies
-/ras_frontend/node_modules
-/ras_frontend/.pnp
-/ras_frontend.pnp.js
-
-# testing
-/ras_frontend/coverage
-
-# production
-/ras_frontend/build
-
-# misc
-/ras_frontend.DS_Store
-/ras_frontend.env.local
-/ras_frontend.env.development.local
-/ras_frontend.env.test.local
-/ras_frontend.env.production.local
-
-/ras_frontend/npm-debug.log*
-/ras_frontend/yarn-debug.log*
-/ras_frontend/yarn-error.log*
-/pyvenv.cfg
 /.vscode
-/Lib
-/Scripts
-/HMS
-/hms_frontend
+
+
+

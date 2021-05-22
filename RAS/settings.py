@@ -26,7 +26,7 @@ SECRET_KEY = '6@8b!0pwhj8l%4=o0@@2g5m+^$w60#6+2x#6=eb)4i!o#_**z5'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['restaurant-automation-system.herokuapp.com']
 
 
 # Application definition
@@ -127,6 +127,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
 
 STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATICFILES_STORAGE = 'whitenoise.django.GzipManifestStaticFilesStorage'
 
 CORS_ORIGIN_WHITELIST = [
      'http://localhost:3000'
