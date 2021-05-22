@@ -79,7 +79,7 @@ WSGI_APPLICATION = 'RAS.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 
-DATABASES = {
+''' DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'RAS',
@@ -88,6 +88,13 @@ DATABASES = {
         'HOST': '127.0.0.1',
         
         'PORT': '3306',
+    }
+} '''
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
 

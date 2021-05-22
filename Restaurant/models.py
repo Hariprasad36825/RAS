@@ -19,7 +19,7 @@ class Food(models.Model):
     ingredient_list_id = models.CharField(max_length=255, blank=True, null=True)
     quantity_list = models.CharField(max_length=255, blank=True, null=True)
     complementory_list = models.CharField(max_length=255, blank=True, null=True)
-    price = models.IntegerField(blank=True, null=True)
+    price = models.IntegerField(blank=True, null=True, default = 0)
     name = models.CharField(db_column='NAME', max_length=20, blank=True, null=True)  # Field name made lowercase.
     isvisible = models.IntegerField(db_column='ISVISIBLE', choices=[(1, 'Yes'), (0, 'No')], blank=True, null=True, default=1)  # Field name made lowercase.
     image = models.ImageField(db_column = "Image", null = True, upload_to="images/")
@@ -30,7 +30,7 @@ class Food(models.Model):
         verbose_name_plural = 'Food'
         constraints = [
             CheckConstraint(
-            check = Q(price_gte=0),
+            check = Q(price__gte=0),
             name = 'price_chk_1'
         )
         ]
@@ -46,12 +46,12 @@ class Inventory(models.Model):
         managed = True
         db_table = 'inventory'
         verbose_name_plural = 'inventory'
-        constraints = [
+        ''' constraints = [
             CheckConstraint(
             check = Q(quantity_gte=0),
             name = 'quantity_chk_1'
         )
-        ]
+        ] '''
 
 
 class Login(models.Model):
@@ -64,47 +64,23 @@ class Login(models.Model):
         managed = True
         db_table = 'login'
         verbose_name_plural = 'login'
-        
-
-
-class Purchase(models.Model):
-    ingredient = models.ForeignKey(Inventory, models.DO_NOTHING, db_column='INGREDIENT_ID', null=True)  # Field name made lowercase.
-    quantity = models.FloatField(db_column='QUANTITY', blank=True, null=True)  # Field name made lowercase.
-    price = models.FloatField(db_column='PRICE', blank=True, null=True)  # Field name made lowercase.
-    date = models.DateTimeField(default=dt.now(), db_column='DATE')  # Field name made lowercase.
-    id = models.AutoField(primary_key = True)
-
-    class Meta:
-        managed = True
-        db_table = 'purchase'
-        verbose_name_plural = 'purchase'
-        constraints = [
-            CheckConstraint(
-            check = Q(price_gte=0),
-            name = 'price_chk_2'
-        ),
-        CheckConstraint(
-            check = Q(quantity_gte=0),
-            name = 'quantity_chk_2'
-        )
-        ]
-
+          
 
 class Sales(models.Model):
     item_code = models.ForeignKey(Food, models.DO_NOTHING, db_column='ITEM_CODE', blank=True, null=True)  # Field name made lowercase.
     quantity = models.IntegerField(db_column='QUANTITY', blank=True, null=True)  # Field name made lowercase.
-    date = models.DateTimeField(default=dt.now(), db_column='DATE', null=True)  # Field name made lowercase.
+    date = models.DateTimeField(auto_now = True, db_column='DATE', null=True)  # Field name made lowercase.
     id = models.AutoField(primary_key=True)
     class Meta:
         managed = True
         db_table = 'sales'
         verbose_name_plural = 'sales'
-        constraints = [ 
+        ''' constraints = [ 
             CheckConstraint(
-            check = Q(quantity_gte=0),
+            check = Q(quantity__gte=0),
             name = 'quantity_chk_3'
         )
-        ]
+        ] '''
 
 class Variable(models.Model):
     balance = models.FloatField(db_column='BALANCE', primary_key=True)
@@ -119,7 +95,7 @@ class DailyConsumption(models.Model):
     id = models.AutoField(primary_key=True)
     ingredient_id = models.IntegerField(null=True)
     quantity = models.FloatField(null=True)
-    date = models.DateField(default=date.today())
+    date = models.DateField(auto_now_add=True)
 
     class Meta:
         managed = True
@@ -137,3 +113,15 @@ class PurchaseList(models.Model):
         db_table = 'PurchaseList'
         verbose_name_plural = 'PurchaseList'
 
+class Purchase(models.Model):
+    id = models.AutoField(primary_key = True)
+    ingredient = models.ForeignKey(Inventory, models.DO_NOTHING, db_column='INGREDIENT_ID', null=True)  # Field name made lowercase.
+    quantity = models.FloatField(db_column='QUANTITY', blank=True, null=True)  # Field name made lowercase.
+    price = models.FloatField(db_column='PRICE', blank=True, null=True)  # Field name made lowercase.
+    date = models.DateTimeField(auto_now = True, db_column='DATE')  # Field name made lowercase.
+    
+
+    class Meta:
+        managed = True
+        db_table = 'Purchase'
+        verbose_name_plural = 'Purchase'

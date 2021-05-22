@@ -20,13 +20,9 @@ from django.conf import settings
 from django.conf.urls.static import static
 from Restaurant import views
 from django.views.generic import TemplateView
-
-router = routers.DefaultRouter()
-router.register(r'login', views.LoginView, 'Login') 
  
 urlpatterns = [
     path('', admin.site.urls),
-    path('api/', include(router.urls)),
     path('api/', include('Restaurant.urls')),
     re_path(r'^.*', TemplateView.as_view(template_name='index.html'))
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

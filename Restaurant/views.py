@@ -41,8 +41,8 @@ def my_custom_sql(code):
         row = cursor.fetchall()
     return row
 
-class LoginView(viewsets.ModelViewSet):
-    serializer_class = LoginSerializer
+''' class LoginView(viewsets.ModelViewSet):
+    serializer_class = LoginSerializer '''
     
 
 @api_view(['POST'])
