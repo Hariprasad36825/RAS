@@ -86,6 +86,7 @@ DATABASES = {
         'USER': 'root',
         'PASSWORD': 'Mysql@hari#2001',
         'HOST': '127.0.0.1',
+        
         'PORT': '3306',
     }
 }
