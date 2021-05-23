@@ -25,7 +25,6 @@ class Food(models.Model):
     image = models.ImageField(db_column = "Image", null = True, upload_to="images/")
     
     class Meta:
-        managed = True
         db_table = 'Food'
         verbose_name_plural = 'Food'
         constraints = [

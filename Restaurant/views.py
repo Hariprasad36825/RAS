@@ -47,6 +47,7 @@ def my_custom_sql(code):
 
 @api_view(['POST'])
 def loginCheck(request):
+    print("ok")
     if(request.method == 'POST'):
         current_email = request.data.get('email')
         
@@ -67,7 +68,7 @@ def loginCheck(request):
 @api_view(['POST'])
 def get_users(request):
     if(request.method == 'POST'):
-        
+        #Login(email = "admin@gmail.com", password =hb.sha256("admin".encode()).hexdigest(), type = "Owner").save()
         try:
             users = list(Login.objects.all().values())
         except:

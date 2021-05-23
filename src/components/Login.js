@@ -2,6 +2,9 @@ import React, { Component } from "react";
 import "../App.css";
 import axios from "axios";
 import {Redirect} from 'react-router-dom';
+import Cookies from 'js-cookie'
+axios.defaults.xsrfHeaderName = "X-CSRFToken"
+axios.defaults.xsrfCookieName = 'csrftoken'
 
 class Login extends Component {
   state = {
@@ -21,11 +24,18 @@ class Login extends Component {
     this.setState({ password: event.target.value });
   };
 
+  
   handleSubmit = (event) => {
-    axios
-      .post("http://localhost:8000/api/loginCheck", {
+    const csrftoken = Cookies.get('csrftoken')
+    axios({
+      url:'api/loginCheck',
+      method:'POST',
+       data:{
         email: this.state.email,
         password: this.state.password,
+       },
+       headers: {"X-CSRFToken": csrftoken},
+       responseType: 'json',
       })
       .then((res) => {
         if (res.data.type) {
