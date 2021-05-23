@@ -6,6 +6,9 @@ import RadioGroup from "@material-ui/core/RadioGroup";
 import FormControlLabel from "@material-ui/core/FormControlLabel";
 import FormControl from "@material-ui/core/FormControl";
 import FormLabel from "@material-ui/core/FormLabel";
+import Cookies from 'js-cookie'
+axios.defaults.xsrfHeaderName = "X-CSRFToken"
+axios.defaults.xsrfCookieName = 'csrftoken'
 class CreateUser extends Component {
   state = {
     email: "",
@@ -27,8 +30,14 @@ class CreateUser extends Component {
     this.setState({ type: e.target.value });
   };
   handleSubmit = (e) => {
-    axios
-      .post("http://localhost:8000/api/createUser", this.state)
+    const csrftoken = Cookies.get('csrftoken')
+    axios({
+      url:'api/createUser',
+      method:'POST',
+       data:this.state,
+       headers: {"X-CSRFToken": csrftoken},
+       responseType: 'json',
+      })
       .then((res) => {
         if (res.data) {
           this.setState({ show: false });

@@ -76,12 +76,12 @@ def get_users(request):
         
         return Response(users)
 
+@api_view(['POST'])
 def create_user(request):
     if(request.method == 'POST'):
         
         try:
             data = request.data
-            
             if Login.objects.filter(pk=data["email"]).exists():
                 return Response(['User already exists', "warning"])
             mat = validate_password(data["password"])            
@@ -92,6 +92,7 @@ def create_user(request):
             else:
                 return Response(["Password should be 8-20 characters long and contain atleast 1 special character, lowercase, upperccase character and 1 number", "primary"])
         except:
+            traceback.print_exc()
             return Response(['db error, user not created', "danger"])
 
 
@@ -531,12 +532,15 @@ def update_price(request):
 @api_view(['POST'])
 def GetFoodsForClerk(request):
     try:
-        query = 'select UPPER(name), price, image, item_code from food where (isvisible = 1 && (name like "%{}%" || food.item_code like "%{}%"))'.format(request.data["val"],request.data["val"])
+        print(request.data)
+        query = 'select UPPER(name), price, image, item_code from food where (isvisible = 1 && (name like "{}" || food.item_code like "{}"))'.format(request.data["val"],request.data["val"])
+        print(query)
         result = list(my_custom_sql(query))   
+        print(result)
         return Response(result)
     except:
         traceback.print_exc()
-        return Response("Db error") 
+        return Response({"Db error"}) 
 
 @api_view(['POST'])
 def get_foods(request):
@@ -562,6 +566,7 @@ def getingredient_list(request):
 def add_food(request):
     try:
         if(request.method=='POST'):
+            print("all done")
             data=request.data
             ingredientsList = data["nameList"]
             quantityList = data["quantityList"]
@@ -587,6 +592,7 @@ def add_food(request):
                 return Response(["food created","success"])
     except:
         traceback.print_exc()
+        return Response(["food created","failure"])
  
 @api_view(['POST'])
 def add_ingredients(request):
@@ -603,9 +609,10 @@ def add_ingredients(request):
             for i in range(len(ingredientsList)):
                 new_ing=Inventory(name=(ingredientsList[i].upper()),quantity=0)
                 new_ing.save()
-        return Response("ingredients created")
+        return Response({"ingredients created"})
     except:
         traceback.print_exc()
+        return Response({"can't create ingredients"})
 
 def calculateThreshold(data):
     for item in data:
@@ -833,83 +840,19 @@ def get_Invoice(request):
                 return response
 
 @api_view(['POST'])
-def get_foods(request):
-    query = "select item_code, name, price from food where food.isvisible = 1"
-    result = list(my_custom_sql(query))
-    return Response(result)
-
-@api_view(['POST'])
 def get_complement(request):
     query = "select name from food where food.isvisible = 0"
     result = list(my_custom_sql(query))
     result = [i[0] for i in result]
     return Response(result)
 
-@api_view(['POST'])
-def getingredient_list(request):
-    try:
-        if(request.method=='POST'):
-            query="select name from inventory"
-            result = list(my_custom_sql(query))
-            result = [i[0] for i in result]
-            #print(result)
-            return Response(result)
-        else:
-            return Response("no inventory")
-    except:
-        traceback.print_exc()
- 
-@api_view(['POST'])
-def add_food(request):
-    try:
-        if(request.method=='POST'):
-            data=request.data
-            ingredientsList = data["nameList"]
-            quantityList = data["quantityList"]
-            complementoryList = data["complement"]
-            complementDict=dict(my_custom_sql("select name,item_code from food"))
-            ingredientsdict=dict(my_custom_sql("select name,ingredient_id from inventory"))
-            if Food.objects.filter(name=data["foodname"]).exists():
-                return Response(["food already exists", "warning"])
-            else:
-                for i in range(0,len(ingredientsList)):
-                    ingredientsList[i] = str(ingredientsdict[ingredientsList[i]])
-                for i in range(len(complementoryList)):
-                    complementoryList[i] = str(complementDict[complementoryList[i]])
-                visibility=1
-                if(int(data["price"])==0):
-                    visibility=0
-                ingListString = ",".join(ingredientsList)
-                ingquantityString=",".join([str(_) for _ in quantityList])
-                complementString = ",".join(complementoryList)
-                new_food = Food(name= data["foodname"].upper(),
-                ingredient_list_id=ingListString,quantity_list=ingquantityString,price=data["price"],isvisible=visibility, 
-                complementory_list = complementString)
-                new_food.save() 
-                return Response(["food created", "success"])
-    except:
-        traceback.print_exc()
- 
-@api_view(['POST'])
-def add_ingredients(request):
-    try: 
-        if(request.method=='POST'):
-            data=request.data["name"]
-            print(data)
-            if Inventory.objects.filter(name=data).exists():
-                return Response([(data + " already exists"),"warning"])
-            new_ing=Inventory(name=data,quantity=0)
-            new_ing.save()
-            return Response(["ingredients created","success"])
-    except:
-        traceback.print_exc()
-
 
 @api_view(['POST'])
-
 def get_Image(request):
-    image=request.FILES["image"]
-    name=request.FILES["name"]
+    print(request.data)
+    image=request.FILES.get("image")
+    name=str(request.FILES.get("name")).upper()
+    print(name)
     food_row=Food.objects.get(name=name)
     food_row.image=image
     food_row.save()

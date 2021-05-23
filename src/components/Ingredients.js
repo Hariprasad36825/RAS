@@ -2,8 +2,10 @@ import axios from "axios";
 import React, { Component } from "react";
 import "./Addfooditems.css";
 import Alert from "./Alert.js";
-
 import Complement from "./Complement";
+import Cookies from 'js-cookie'
+axios.defaults.xsrfHeaderName = "X-CSRFToken"
+axios.defaults.xsrfCookieName = 'csrftoken'
 
 class Ingredients extends Component {
   state = {
@@ -79,8 +81,14 @@ class Ingredients extends Component {
       this.setState({ addNew: false, show: true, message: r[0], class: r[1] });
     }
     if (flag === 0) {
-      axios
-        .post("http://localhost:8000/api/AddIngredients", this.state)
+      const csrftoken = Cookies.get('csrftoken')
+      axios({
+        url:'api/AddIngredients',
+        method:'POST',
+        data:this.state,
+        headers: {"X-CSRFToken": csrftoken},
+        responseType: 'json',
+      })
         .then((res) => {
           this.setState({ show: false });
           this.setState({
@@ -101,11 +109,15 @@ class Ingredients extends Component {
   };
 
   getIngredients = () => {
-    axios
-
-      .post("http://localhost:8000/api/GetIngredients")
-
-      .then((response) => {
+    const csrftoken = Cookies.get('csrftoken')
+    axios({
+      url:'api/GetIngredients',
+      method:'POST',
+       data:{},
+       headers: {"X-CSRFToken": csrftoken},
+       responseType: 'json',
+      })
+    .then((response) => {
         let userArr = response.data;
 
         if (userArr.length !== 0) {
@@ -117,7 +129,15 @@ class Ingredients extends Component {
   };
   componentDidMount() {
     this.getIngredients();
-    axios.post("http://localhost:8000/api/GetComplement").then((response) => {
+    const csrftoken = Cookies.get('csrftoken')
+    axios({
+      url:'api/GetComplement',
+      method:'POST',
+       data:{},
+       headers: {"X-CSRFToken": csrftoken},
+       responseType: 'json',
+      })
+    .then((response) => {
       let data = response.data;
       if (data !== 0) {
         this.setState({ availableComplement: data });
@@ -189,8 +209,14 @@ class Ingredients extends Component {
   };
 
   handlesubmit = (event) => {
-    axios
-      .post("http://localhost:8000/api/AddFoodItems", this.state)
+    const csrftoken = Cookies.get('csrftoken')
+    axios({
+      url:'api/AddFoodItems',
+      method:'POST',
+       data:this.state,
+       headers: {"X-CSRFToken": csrftoken},
+       responseType: 'json',
+      })
       .then((res) => {
         this.setState({ show: false });
         this.setState({
@@ -211,7 +237,15 @@ class Ingredients extends Component {
             this.state.selectedImage.name
           );
           fd.append("name", this.state.selectedImage, this.state.foodname);
-          axios.post("http://localhost:8000/api/image", fd).then((res) => {
+          const csrftoken = Cookies.get('csrftoken')
+            axios({
+              url:'api/image',
+              method:'POST',
+              data: fd,
+              headers: {"X-CSRFToken": csrftoken},
+              responseType: 'json',
+              })
+            .then((res) => {
             console.log(res.data);
           });
         }

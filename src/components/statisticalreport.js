@@ -2,7 +2,9 @@ import React, { Component } from "react";
 import { Bar, Doughnut} from "react-chartjs-2";
 import "./statisticalreport.css";
 import axios from "axios";
-
+import Cookies from 'js-cookie'
+axios.defaults.xsrfHeaderName = "X-CSRFToken"
+axios.defaults.xsrfCookieName = 'csrftoken'
 class Statisticalreport extends Component {
   state = {
     chartdata: {
@@ -17,11 +19,15 @@ class Statisticalreport extends Component {
   };
 
   componentDidMount() {
-    axios
-
-      .post("http://localhost:8000/api/GetSalesGraph")
-
-      .then((response) => {
+    const csrftoken = Cookies.get('csrftoken')
+    axios({
+      url:'api/GetSalesGraph',
+      method:'POST',
+       data:{},
+       headers: {"X-CSRFToken": csrftoken},
+       responseType: 'json',
+      })
+    .then((response) => {
         let chartdata = response.data;
         this.setState({ chartdata: chartdata });
       })

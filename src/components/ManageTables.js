@@ -11,6 +11,9 @@ import ReceiptIcon from '@material-ui/icons/Receipt';
 import CloseIcon from '@material-ui/icons/Close';
 import axios from "axios";
 import printJS from "print-js";
+import Cookies from 'js-cookie'
+axios.defaults.xsrfHeaderName = "X-CSRFToken"
+axios.defaults.xsrfCookieName = 'csrftoken'
 
 const useStyles = makeStyles((theme) => ({
     root: {
@@ -177,15 +180,19 @@ export default function Tables(){
 
     const generatebill = (table) => {
         {console.log("done")}
-        axios
-            .post("http://localhost:8000/api/BillGenerator", {
-                no:table,
-                email:sessionStorage.getItem("email"),
-                order: Object.values(JSON.parse(localStorage.getItem(table))),
-                }, {
-            responseType: "arraybuffer",
-            })
-            .then((response) => {
+        const csrftoken = Cookies.get('csrftoken')
+        axios({
+        url:'api/BillGenerator',
+        method:'POST',
+        data:{
+            no:table,
+            email:sessionStorage.getItem("email"),
+            order: Object.values(JSON.parse(localStorage.getItem(table))),
+        },
+        headers: {"X-CSRFToken": csrftoken},
+        responseType: 'arraybuffer',
+        })
+        .then((response) => {
             handleDeleteTable(table) 
             const url = window.URL.createObjectURL(new Blob([response.data]));
             printJS(url);

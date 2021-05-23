@@ -2,6 +2,9 @@ import axios from "axios";
 import React, { Component } from "react";
 import printJS from "print-js";
 import "./Addfooditems.css";
+import Cookies from 'js-cookie'
+axios.defaults.xsrfHeaderName = "X-CSRFToken"
+axios.defaults.xsrfCookieName = 'csrftoken'
 
 class Invoice extends Component {
   state = {
@@ -16,11 +19,15 @@ class Invoice extends Component {
   };
 
   getIngredients = () => {
-    axios
-
-      .post("http://localhost:8000/api/GetIngredients")
-
-      .then((response) => {
+    const csrftoken = Cookies.get('csrftoken')
+    axios({
+      url:'api/GetIngredients',
+      method:'POST',
+       data:{},
+       headers: {"X-CSRFToken": csrftoken},
+       responseType: 'json',
+      })
+    .then((response) => {
         let userArr = response.data;
 
         if (userArr.length !== 0) {
@@ -92,9 +99,13 @@ class Invoice extends Component {
 
   handlesubmit = (event) => {
     console.log(this.state)
-    axios
-      .post("http://localhost:8000/api/GenerateInvoice", this.state, {
-        responseType: "blob",
+    const csrftoken = Cookies.get('csrftoken')
+    axios({
+      url:'api/GenerateInvoice',
+      method:'POST',
+       data:this.state,
+       headers: {"X-CSRFToken": csrftoken},
+       responseType: 'json',
       })
       .then((response) => {
         const url = window.URL.createObjectURL(new Blob([response.data]));

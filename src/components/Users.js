@@ -1,17 +1,24 @@
 import React, { Component } from "react";
 import axios from "axios";
 import Expire from './Expire';
+import Cookies from 'js-cookie'
+axios.defaults.xsrfHeaderName = "X-CSRFToken"
+axios.defaults.xsrfCookieName = 'csrftoken'
 
 class Users extends Component {
   state = { result: [] };
   
   
   componentDidMount() {
-    axios
-
-      .post("http://localhost:8000/api/getUsers")
-
-      .then((response) => {
+    const csrftoken = Cookies.get('csrftoken')
+    axios({
+      url:'api/getUsers',
+      method:'POST',
+       data:{},
+       headers: {"X-CSRFToken": csrftoken},
+       responseType: 'json',
+      })
+    .then((response) => {
 
         let userArr = response.data;
 
@@ -37,10 +44,16 @@ class Users extends Component {
     else{
 
     console.log(item);
-    axios
-
-    .post("http://localhost:8000/api/deleteUsers",{email:item.email})
-
+    const csrftoken = Cookies.get('csrftoken')
+    axios({
+      url:'api/deleteUsers',
+      method:'POST',
+       data:{
+        email:item.email
+       },
+       headers: {"X-CSRFToken": csrftoken},
+       responseType: 'json',
+      })
     .then((response) => {
 
       let userArr = response.data;

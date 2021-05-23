@@ -1,6 +1,9 @@
 import React, { Component } from "react";
 import axios from "axios";
 import Alert from "./Alert";
+import Cookies from 'js-cookie'
+axios.defaults.xsrfHeaderName = "X-CSRFToken"
+axios.defaults.xsrfCookieName = 'csrftoken'
 class Otp extends Component {
   state = {
     number: "",
@@ -15,12 +18,18 @@ class Otp extends Component {
   };
 
   handleSubmit = (event) => {
-    axios
-      .post("http://localhost:8000/api/OtpValidation", {
+    const csrftoken = Cookies.get('csrftoken')
+    axios({
+      url:'api/OtpValidation',
+      method:'POST',
+       data:{
         email: sessionStorage.getItem("requestEmail"),
         number: this.state.number,
+       },
+       headers: {"X-CSRFToken": csrftoken},
+       responseType: 'json',
       })
-      .then((res) => {
+    .then((res) => {
         if (res.data.cango) {
           sessionStorage.setItem("otp_valid", "yes");
           this.props.history.push("/changePassword");

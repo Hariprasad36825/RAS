@@ -2,6 +2,9 @@ import React, { Component } from "react";
 import axios from "axios";
 import { Redirect } from "react-router-dom";
 import Alert from "./Alert";
+import Cookies from 'js-cookie'
+axios.defaults.xsrfHeaderName = "X-CSRFToken"
+axios.defaults.xsrfCookieName = 'csrftoken'
 class ChangePassword extends Component {
   state = {
     password: "",
@@ -29,10 +32,16 @@ class ChangePassword extends Component {
         });
       });
     } else {
-      axios
-        .post("http://localhost:8000/api/ChangePassword", {
+      const csrftoken = Cookies.get('csrftoken')
+      axios({
+        url:'api/ChangePassword',
+        method:'POST',
+        data:{
           email: sessionStorage.getItem("requestEmail"),
           password: this.state.password,
+        },
+        headers: {"X-CSRFToken": csrftoken},
+        responseType: 'json',
         })
         .then((res) => {
           if (res.data.cango) {

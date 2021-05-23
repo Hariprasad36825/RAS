@@ -1,21 +1,35 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { TableRow, TableHead, TableCell, TableBody, Table, Button} from '@material-ui/core';
+import Cookies from 'js-cookie'
+axios.defaults.xsrfHeaderName = "X-CSRFToken"
+axios.defaults.xsrfCookieName = 'csrftoken'
 
 export default function PurchaseList(){
     const [purchase_list, set_purhase_list] = useState([])
 
     useEffect(()=>{
-        axios
-        .get("http://localhost:8000/api/GetPurchaseList")
+        const csrftoken = Cookies.get('csrftoken')
+        axios({
+        url:'api/GetPurchaseList',
+        method:'GET',
+        headers: {"X-CSRFToken": csrftoken},
+        responseType: 'json',
+        })
         .then((res) =>{
             set_purhase_list(res.data)
         })
     },[])
 
     const handleSubmit = () =>{
-        axios
-        .post("http://localhost:8000/api/GetPurchaseList")
+        const csrftoken = Cookies.get('csrftoken')
+        axios({
+        url:'api/GetPurchaseList',
+        method:'POST',
+        data:{},
+        headers: {"X-CSRFToken": csrftoken},
+        responseType: 'json',
+        })
         .then((res) =>{
             set_purhase_list(res.data)
         })

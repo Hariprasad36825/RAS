@@ -8,6 +8,9 @@ import FormControlLabel from '@material-ui/core/FormControlLabel';
 import FormControl from '@material-ui/core/FormControl';
 import FormLabel from '@material-ui/core/FormLabel';
 import Button from '@material-ui/core/Button';
+import Cookies from 'js-cookie'
+axios.defaults.xsrfHeaderName = "X-CSRFToken"
+axios.defaults.xsrfCookieName = 'csrftoken'
 
 var fileDownload = require('js-file-download');
 
@@ -30,11 +33,17 @@ class Manager extends Component {
     //     date : this.state.date,
     //     file : this.state.file
     //   })
-    await axios.get("http://localhost:8000/api/get_excel",{
+    const csrftoken = Cookies.get('csrftoken')
+    axios({
+      url:'api/get_excel',
+      method:'GET',
       params: {
         filename: this.state.file
-      }
-    }).then((res)=>{
+      },
+       headers: {"X-CSRFToken": csrftoken},
+       responseType: 'json',
+      })
+    .then((res)=>{
         fileDownload(res.data, this.state.file+"."+this.state.format);}
       )
 
@@ -44,11 +53,17 @@ class Manager extends Component {
     if(this.state.format === 'pdf')
     {
       console.log(this.state.date)
-      axios.post("http://localhost:8000/api/CreatePdf",{
-        date : this.state.date,
+      const csrftoken = Cookies.get('csrftoken')
+      axios({
+        url:'api/CreatePdf',
+        method:'POST',
+        data:{
+          date : this.state.date,
         file : this.state.file,
-        
-      })
+        },
+        headers: {"X-CSRFToken": csrftoken},
+        responseType: 'json',
+        })
       .then((res) => {
         const file = new Blob(
               [res.data], 
@@ -61,10 +76,17 @@ class Manager extends Component {
 
     else if(this.state.format === 'csv')
     {
-      axios.post("http://localhost:8000/api/CreateCsv",{
-        date : this.state.date,
-        file : this.state.file
-      })
+      const csrftoken = Cookies.get('csrftoken')
+      axios({
+        url:'api/CreateCsv',
+        method:'POST',
+        data:{
+          date : this.state.date,
+          file : this.state.file
+        },
+        headers: {"X-CSRFToken": csrftoken},
+        responseType: 'json',
+        })
       .then((res) => {
         console.log(res)
         fileDownload(res.data, this.state.file+"."+this.state.format);
@@ -72,10 +94,17 @@ class Manager extends Component {
     }
     else{
       console.log("hello")
-      axios.post("http://localhost:8000/api/CreateExcel",{
-         date : this.state.date,
-         file : this.state.file,
-       },{responseType: 'arraybuffer',})
+      const csrftoken = Cookies.get('csrftoken')
+      axios({
+        url:'api/CreateExcel',
+        method:'POST',
+        data:{
+          date : this.state.date,
+          file : this.state.file
+        },
+        headers: {"X-CSRFToken": csrftoken},
+        responseType: 'arraybuffer',
+        })
        .then((res) => {
         var blob = new Blob([res.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
         console.log(blob)

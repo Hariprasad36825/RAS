@@ -11,6 +11,9 @@ import TextField from '@material-ui/core/TextField';
 import Tables from './ManageTables';
 import SearchIcon from '@material-ui/icons/Search';
 import InputAdornment from '@material-ui/core/InputAdornment';
+import Cookies from 'js-cookie'
+axios.defaults.xsrfHeaderName = "X-CSRFToken"
+axios.defaults.xsrfCookieName = 'csrftoken'
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -62,7 +65,14 @@ export default function ViewFood() {
    console.log(food_list)
 
   async function fetchFood() {
-    axios.post("http://localhost:8000/api/GetFoodsForClerk",{val: changes})
+    const csrftoken = Cookies.get('csrftoken')
+    axios({
+      url:'api/GetFoodsForClerk',
+      method:'POST',
+       data:{val: changes},
+       headers: {"X-CSRFToken": csrftoken},
+       responseType: 'json',
+      })
         .then((res) => {
             setValue(res.data)
             
@@ -144,9 +154,16 @@ export default function ViewFood() {
     
     const handleChange = (event) => {
       setChanges(event.target.value);
-      axios.post("http://localhost:8000/api/GetFoodsForClerk",{val : changes})
-            .then((res) => {
-                setValue(res.data)
+      const csrftoken = Cookies.get('csrftoken')
+      axios({
+        url:'api/GetFoodsForClerk',
+        method:'POST',
+        data:{val: changes},
+        headers: {"X-CSRFToken": csrftoken},
+        responseType: 'json',
+        })
+        .then((res) => {
+            setValue(res.data)
       });
       
     }

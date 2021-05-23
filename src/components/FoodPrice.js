@@ -7,11 +7,22 @@ import {red, deepPurple} from '@material-ui/core/colors';
 import AddIcon from '@material-ui/icons/Add';
 import RemoveIcon from '@material-ui/icons/Remove';
 import Button from "@material-ui/core/Button";
+import Cookies from 'js-cookie'
+axios.defaults.xsrfHeaderName = "X-CSRFToken"
+axios.defaults.xsrfCookieName = 'csrftoken'
 
 class FoodPrice extends Component {
   state = { FoodList: [], changed: {}, value: "" };
   componentDidMount() {
-    axios.post("http://localhost:8000/api/GetFoods").then((response) => {
+    const csrftoken = Cookies.get('csrftoken')
+    axios({
+      url:'api/GetFoods',
+      method:'POST',
+       data:{},
+       headers: {"X-CSRFToken": csrftoken},
+       responseType: 'json',
+      })
+    .then((response) => {
       
       this.setState({ FoodList: response.data });
     });
@@ -20,12 +31,17 @@ class FoodPrice extends Component {
   handleDelete=(index)=>{
 
     let name=this.state.FoodList[index][1]
-
-    axios
-
-        .post("http://localhost:8000/api/DeleteFood", {name:name})
-
-        .then((response) => {
+    const csrftoken = Cookies.get('csrftoken')
+    axios({
+      url:'api/DeleteFood',
+      method:'POST',
+       data:{
+        name:name,
+       },
+       headers: {"X-CSRFToken": csrftoken},
+       responseType: 'json',
+      })
+      .then((response) => {
           let userArr = response.data;
 
           if (typeof userArr === "object") {
@@ -62,7 +78,15 @@ class FoodPrice extends Component {
     }
   };
   updatDb = () => {
-    axios.post("http://localhost:8000/api/UpdatePrice", this.state.changed).then((response) => {
+    const csrftoken = Cookies.get('csrftoken')
+    axios({
+      url:'api/UpdatePrice',
+      method:'POST',
+       data:this.state.changed,
+       headers: {"X-CSRFToken": csrftoken},
+       responseType: 'json',
+      })
+      .then((response) => {
       this.setState({value: "done"})
       console.log(response.data)
       this.setState({ value: response.data });

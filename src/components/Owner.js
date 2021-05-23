@@ -4,8 +4,9 @@ import axios from "axios";
 import Tabs from "./Tabs.js"
 import "./Tab.css";
 import CustomAlert from './CustomAlert';
-
-
+import Cookies from 'js-cookie'
+axios.defaults.xsrfHeaderName = "X-CSRFToken"
+axios.defaults.xsrfCookieName = 'csrftoken'
 
 class Owner extends Component {
 
@@ -13,12 +14,14 @@ class Owner extends Component {
 
   componentDidMount() {
 
-    
-
-    axios
-
-      .post("http://localhost:8000/api/getUsers")
-
+    const csrftoken = Cookies.get('csrftoken')
+    axios({
+      url:'api/getUsers',
+      method:'POST',
+       data:{},
+       headers: {"X-CSRFToken": csrftoken},
+       responseType: 'json',
+      })
       .then((response) => {
 
         let userArr = response.data;
@@ -49,13 +52,20 @@ class Owner extends Component {
 
 
   handleSubmit = (e) => {
-
+    const csrftoken = Cookies.get('csrftoken')
     setTimeout(()=>{
-    axios.post("http://localhost:8000/api/createUser", {
-      email: this.state.email,
-      password: this.state.password,
-      type:this.state.type
-    })
+      
+    axios({
+      url:'api/createUser',
+      method:'POST',
+       data:{
+        email: this.state.email,
+        password: this.state.password,
+        type:this.state.type
+       },
+       headers: {"X-CSRFToken": csrftoken},
+       responseType: 'json',
+      })
     .then((res) => {
       if (res.data) {
         alert(this.state.email + res.data);
@@ -64,10 +74,16 @@ class Owner extends Component {
     )
   },1)
 
-  axios
-
-  .post("http://localhost:8000/api/getUsers")
-
+    axios({
+      url:'api/getUsers',
+      method:'POST',
+       data:{
+        email: this.state.email,
+        password: this.state.password,
+       },
+       headers: {"X-CSRFToken": csrftoken},
+       responseType: 'json',
+      })
   .then((response) => {
 
     let userArr = response.data;
@@ -94,10 +110,16 @@ class Owner extends Component {
     else{
 
     console.log(item);
-    axios
-
-    .post("http://localhost:8000/api/deleteUsers",{email:item.email})
-
+    const csrftoken = Cookies.get('csrftoken')
+    axios({
+      url:'api/deleteUsers',
+      method:'POST',
+       data:{
+        email:item.email
+       },
+       headers: {"X-CSRFToken": csrftoken},
+       responseType: 'json',
+      })
     .then((response) => {
 
       let userArr = response.data;

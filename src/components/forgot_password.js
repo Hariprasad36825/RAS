@@ -1,5 +1,8 @@
 import React, { Component } from "react";
 import axios from "axios";
+import Cookies from 'js-cookie'
+axios.defaults.xsrfHeaderName = "X-CSRFToken"
+axios.defaults.xsrfCookieName = 'csrftoken'
 
 class Forgot_password extends Component {
   state = {
@@ -13,9 +16,15 @@ class Forgot_password extends Component {
 
   handleSubmit = (event) => {
     sessionStorage.setItem("requestEmail", this.state.email);
-    axios
-      .post("http://localhost:8000/api/ForgotPassword", {
+    const csrftoken = Cookies.get('csrftoken')
+    axios({
+      url:'api/ForgotPassword',
+      method:'POST',
+       data:{
         email: this.state.email,
+       },
+       headers: {"X-CSRFToken": csrftoken},
+       responseType: 'json',
       })
       .then((res) => {
         console.log(res.data.cango);

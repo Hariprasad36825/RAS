@@ -4,6 +4,9 @@ import Alert from "./Alert";
 //import "./Addfooditems.css";
 import Complement from "./Complement";
 import checkAvailableComplement from "./Complement";
+import Cookies from 'js-cookie'
+axios.defaults.xsrfHeaderName = "X-CSRFToken"
+axios.defaults.xsrfCookieName = 'csrftoken'
 
 class AddFoodItem extends Component {
   state = {
@@ -22,9 +25,13 @@ class AddFoodItem extends Component {
   };
 
   handlenew = (event) => {
-    axios
-      .post("http://localhost:8000/api/AddIngredients", {
-        name: this.state.ingredientname,
+    const csrftoken = Cookies.get('csrftoken')
+    axios({
+      url:'api/AddIngredients',
+      method:'POST',
+       data:{name: this.state.ingredientname},
+       headers: {"X-CSRFToken": csrftoken},
+       responseType: 'json',
       })
       .then((response) => {
         this.setState({ show: false });
@@ -40,10 +47,14 @@ class AddFoodItem extends Component {
   };
 
   getIngredients = () => {
-    axios
-
-      .post("http://localhost:8000/api/GetIngredients")
-
+    const csrftoken = Cookies.get('csrftoken')
+    axios({
+      url:'api/GetIngredients',
+      method:'POST',
+       data:{},
+       headers: {"X-CSRFToken": csrftoken},
+       responseType: 'json',
+      })
       .then((response) => {
         let userArr = response.data;
 
@@ -56,7 +67,14 @@ class AddFoodItem extends Component {
   };
   componentDidMount() {
     this.getIngredients();
-    axios.post("http://localhost:8000/api/GetComplement").then((response) => {
+    const csrftoken = Cookies.get('csrftoken')
+    axios({
+      url:'api/GetComplement',
+      method:'POST',
+       data:{},
+       headers: {"X-CSRFToken": csrftoken},
+       responseType: 'json',
+      }).then((response) => {
       let data = response.data;
       if (data !== 0) {
         this.setState({ availableComplement: data });
@@ -119,8 +137,14 @@ class AddFoodItem extends Component {
   };
 
   handlesubmit = (event) => {
-    axios
-      .post("http://localhost:8000/api/AddFoodItems", this.state)
+    const csrftoken = Cookies.get('csrftoken')
+    axios({
+      url:'api/AddFoodItems',
+      method:'POST',
+       data:this.state,
+       headers: {"X-CSRFToken": csrftoken},
+       responseType: 'json',
+      })
       .then((res) => {
         alert(res.data);
       });
