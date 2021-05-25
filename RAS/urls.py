@@ -24,6 +24,7 @@ from .views import index
  
 urlpatterns = [
     path('', index, name='index'),
+    path('/Demo', index, name='index'),
     path('admin/', admin.site.urls),
     path('api/', include('Restaurant.urls')),
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
