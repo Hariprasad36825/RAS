@@ -17,7 +17,7 @@ class InventoryAdmin(admin.ModelAdmin):
     list_display = ('ingredient_id', 'name', 'quantity', 'thresholdvalue')
 
 class VariableAdmin(admin.ModelAdmin):
-    list_display = ('balance',)
+    list_display = ('balance','id')
 
 class DailyConsumptionAdmin(admin.ModelAdmin):
     list_display = ('id', 'ingredient_id', 'quantity', 'date')

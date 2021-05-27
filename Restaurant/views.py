@@ -1,3 +1,4 @@
+from django.http.response import JsonResponse
 from django.shortcuts import render
 import hashlib as hb
 import random
@@ -5,14 +6,15 @@ from rest_framework import viewsets
 from .serializers import *
 from .models import *
 from rest_framework.decorators import api_view
-from rest_framework.response import Response 
+from rest_framework.response import Response
 from django.http import HttpResponse
 from django.core.mail import send_mail
 from django.core.files.storage import FileSystemStorage
 from reportlab.platypus import Table
 from reportlab.platypus import TableStyle
 from reportlab.lib import colors
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Image
+from reportlab.platypus import SimpleDocTemplate, Paragraph
+import reportlab.platypus
 from reportlab.lib.pagesizes import letter
 from django.db import connection
 import os
@@ -30,10 +32,12 @@ from InvoiceGenerator.pdf import SimpleInvoice
 from tempfile import NamedTemporaryFile
 from threading import Thread
 from pathlib import Path
-from PIL import ImageDraw, ImageFont
+from PIL import ImageDraw, ImageFont, Image
 from num2words import num2words as nw
+from datetime import date
 import itertools
 import re
+from django.db.models import Sum
 
 def my_custom_sql(code):
     with connection.cursor() as cursor:
@@ -41,13 +45,8 @@ def my_custom_sql(code):
         row = cursor.fetchall()
     return row
 
-''' class LoginView(viewsets.ModelViewSet):
-    serializer_class = LoginSerializer '''
-    
-
 @api_view(['POST'])
 def loginCheck(request):
-    print("ok")
     if(request.method == 'POST'):
         current_email = request.data.get('email')
         
@@ -82,11 +81,12 @@ def create_user(request):
         
         try:
             data = request.data
+            print(data["type"])
             if Login.objects.filter(pk=data["email"]).exists():
                 return Response(['User already exists', "warning"])
             mat = validate_password(data["password"])            
             if mat:
-                new_user = Login(email= data["email"], password= hb.sha256(data["password"].encode()).hexdigest(), type= data["type"])
+                new_user = Login(email= data["email"], password= hb.sha256(data["password"].encode()).hexdigest(), type= data["type"].capitalize())
                 new_user.save()
                 return Response(['user created', 'success'])
             else:
@@ -104,7 +104,7 @@ def deleteUsers(request):
         try:
             login_row = Login.objects.get(pk=current_email)
         except:
-             return Response("NO user found")
+            return Response("NO user found")
     login_row.delete()
     users = list(Login.objects.all().values())
     return Response(users)
@@ -180,12 +180,26 @@ def ChangePassword(request):
 @api_view(['POST'])
 def CreateCsv(request):
     if(request.method == "POST"):
+        """ query = Sales.objects.get(item_code = 24)
+        print(query.item_code)
+        query = list(Sales.objects.values('item_code').annotate(quantity = Sum('quantity')))
+        for i in query:
+            food = Food.objects.get(item_code = i['item_code'])
+            i['COST'] = i['quantity']*food.price
+            i['name'] = food.name
+        print(query) """
         try:
             filename = request.data['file']+".csv"
 
             if request.data['file'] == 'sales_report':
-                data = pd.DataFrame(my_custom_sql("SELECT sales.item_code, food.name, sum(sales.quantity) as quantity, sum(food.price*sales.quantity) as COST FROM food inner JOIN sales ON FOOD.ITEM_CODE = SALES.ITEM_CODE where date(sales.date) >= {} group by (food.item_code)".format(request.data['date'])), columns = ["Item Code" , "Food name", "Quatity" , "Cost"])
-
+                query = list(Sales.objects.values('item_code').annotate(quantity = Sum('quantity')).filter(date__gte = request.data['date'] ))
+                for i in query:
+                    food = Food.objects.get(item_code = i['item_code'])
+                    i['COST'] = i['quantity']*food.price
+                    i['name'] = food.name
+                #data = pd.DataFrame(my_custom_sql("SELECT sales.item_code, food.name, sum(sales.quantity) as quantity, sum(food.price*sales.quantity) as COST FROM food inner JOIN sales ON FOOD.ITEM_CODE = SALES.ITEM_CODE where date(sales.date) >= {} group by (food.item_code)".format(request.data['date'])), columns = ["Item Code" , "Food name", "Quatity" , "Cost"])
+                data = pd.DataFrame(query)
+                print(data)
             elif request.data['file'] == 'purchase_report':
                 data = pd.DataFrame(my_custom_sql("select purchase.ingredient_id, inventory.name, purchase.quantity, purchase.price, cast(purchase.date as char) from purchase inner join inventory on purchase.ingredient_id = inventory.ingredient_id where purchase.date >= {}".format(request.data['date'])), columns = ["Ingredient Id", "Ingredient name", "Quantity", "Price", "Purchase time"])
             
@@ -241,44 +255,44 @@ def CreateExcel(request):
         
         monthly_sales = list(my_custom_sql('''
         select
-            sum(if(month = 'Jan', total, 0)) as 'Jan',
-            sum(if(month = 'Feb', total, 0)) as 'Feb',
-            sum(if(month = 'Mar', total, 0)) as 'Mar',
-            sum(if(month = 'Apr', total, 0)) as 'Apr',
-            sum(if(month = 'May', total, 0)) as 'May',
-            sum(if(month = 'Jun', total, 0)) as 'Jun',
-            sum(if(month = 'Jul', total, 0)) as 'Jul',
-            sum(if(month = 'Aug', total, 0)) as 'Aug',
-            sum(if(month = 'Sep', total, 0)) as 'Sep',
-            sum(if(month = 'Oct', total, 0)) as 'Oct',
-            sum(if(month = 'Nov', total, 0)) as 'Nov',
-            sum(if(month = 'Dec', total, 0)) as 'Dec'
+            sum(IIF(month = '01', total, 0)) 'Jan',
+            sum(IIF(month = '02', total, 0)) 'Feb',
+            sum(IIF(month = '03', total, 0)) 'Mar',
+            sum(IIF(month = '04', total, 0)) 'Apr',
+            sum(IIF(month = '05', total, 0)) 'May',
+            sum(IIF(month = '06', total, 0)) 'Jun',
+            sum(IIF(month = '07', total, 0)) 'Jul',
+            sum(IIF(month = '08', total, 0)) 'Aug',
+            sum(IIF(month = '09', total, 0)) 'Sep',
+            sum(IIF(month = '10', total, 0)) 'Oct',
+            sum(IIF(month = '11', total, 0)) 'Nov',
+            sum(IIF(month = '12', total, 0)) 'Dec'
             from(
-                select date_format(sales.date, "%b") as month, sum(food.price*sales.quantity) as total
+                select strftime('%m', sales.date) as month, sum(food.price*sales.quantity) as total
                 from food inner join sales on sales.item_code = food.item_code
-                where date(sales.date) <= now() and date(sales.date) >= date_add(now(), interval -12 month)
-                group by date_format(date(sales.date), "%m-%Y")) as sub
+                where date(sales.date) <= datetime('now','localtime') and date(sales.date) >= date(date('now','localtime'), '-12 month')
+                group by strftime("%m-%Y", date(sales.date))) as sub
         '''))
 
         monthly_purchase = list(my_custom_sql('''
         select
-            sum(if(month = 'Jan', total, 0)) as 'Jan',
-            sum(if(month = 'Feb', total, 0)) as 'Feb',
-            sum(if(month = 'Mar', total, 0)) as 'Mar',
-            sum(if(month = 'Apr', total, 0)) as 'Apr',
-            sum(if(month = 'May', total, 0)) as 'May',
-            sum(if(month = 'Jun', total, 0)) as 'Jun',
-            sum(if(month = 'Jul', total, 0)) as 'Jul',
-            sum(if(month = 'Aug', total, 0)) as 'Aug',
-            sum(if(month = 'Sep', total, 0)) as 'Sep',
-            sum(if(month = 'Oct', total, 0)) as 'Oct',
-            sum(if(month = 'Nov', total, 0)) as 'Nov',
-            sum(if(month = 'Dec', total, 0)) as 'Dec'
+            sum(IIF(month = '01', total, 0)) 'Jan',
+            sum(IIF(month = '02', total, 0)) 'Feb',
+            sum(IIF(month = '03', total, 0)) 'Mar',
+            sum(IIF(month = '04', total, 0)) 'Apr',
+            sum(IIF(month = '05', total, 0)) 'May',
+            sum(IIF(month = '06', total, 0)) 'Jun',
+            sum(IIF(month = '07', total, 0)) 'Jul',
+            sum(IIF(month = '08', total, 0)) 'Aug',
+            sum(IIF(month = '09', total, 0)) 'Sep',
+            sum(IIF(month = '10', total, 0)) 'Oct',
+            sum(IIF(month = '11', total, 0)) 'Nov',
+            sum(IIF(month = '12', total, 0)) 'Dec'
             from(
-                select date_format(purchase.date, "%b") as month, sum(purchase.price) as total
+                select strftime('%m', purchase.date) as month, sum(purchase.price) as total
                 from purchase inner join inventory on purchase.ingredient_id = inventory.ingredient_id
-                where date(purchase.date) <= now() and date(purchase.date) >= date_add(now(), interval -12 month)
-                group by date_format(date(purchase.date), "%m-%Y")) as sub
+                where date(purchase.date) <= datetime('now','localtime') and date(purchase.date) >= date(date('now','localtime'), '-12 month')
+                group by strftime("%m-%Y", date(purchase.date))) as sub
         '''))
 
         monthly_income = []
@@ -397,46 +411,47 @@ def Create_Pdf(request):
     else:
         sales_data = list(my_custom_sql("SELECT sales.item_code, food.name, sales.quantity, food.price*sales.quantity as COST , CAST(sales.date AS char) FROM food inner JOIN sales ON FOOD.ITEM_CODE = SALES.ITEM_CODE where date(sales.date) >= {}".format(request.data['date'])))
         purchase_data = list(my_custom_sql("select purchase.ingredient_id, inventory.name, purchase.quantity, purchase.price, cast(purchase.date as char) from purchase inner join inventory on purchase.ingredient_id = inventory.ingredient_id where purchase.date >= {}".format(request.data['date'])))
+        
         monthly_sales = list(my_custom_sql('''
         select
-            sum(if(month = 'Jan', total, 0)) as 'Jan',
-            sum(if(month = 'Feb', total, 0)) as 'Feb',
-            sum(if(month = 'Mar', total, 0)) as 'Mar',
-            sum(if(month = 'Apr', total, 0)) as 'Apr',
-            sum(if(month = 'May', total, 0)) as 'May',
-            sum(if(month = 'Jun', total, 0)) as 'Jun',
-            sum(if(month = 'Jul', total, 0)) as 'Jul',
-            sum(if(month = 'Aug', total, 0)) as 'Aug',
-            sum(if(month = 'Sep', total, 0)) as 'Sep',
-            sum(if(month = 'Oct', total, 0)) as 'Oct',
-            sum(if(month = 'Nov', total, 0)) as 'Nov',
-            sum(if(month = 'Dec', total, 0)) as 'Dec'
+            sum(IIF(month = '01', total, 0)) 'Jan',
+            sum(IIF(month = '02', total, 0)) 'Feb',
+            sum(IIF(month = '03', total, 0)) 'Mar',
+            sum(IIF(month = '04', total, 0)) 'Apr',
+            sum(IIF(month = '05', total, 0)) 'May',
+            sum(IIF(month = '06', total, 0)) 'Jun',
+            sum(IIF(month = '07', total, 0)) 'Jul',
+            sum(IIF(month = '08', total, 0)) 'Aug',
+            sum(IIF(month = '09', total, 0)) 'Sep',
+            sum(IIF(month = '10', total, 0)) 'Oct',
+            sum(IIF(month = '11', total, 0)) 'Nov',
+            sum(IIF(month = '12', total, 0)) 'Dec'
             from(
-                select date_format(sales.date, "%b") as month, sum(food.price*sales.quantity) as total
+                select strftime('%m', sales.date) as month, sum(food.price*sales.quantity) as total
                 from food inner join sales on sales.item_code = food.item_code
-                where date(sales.date) <= now() and date(sales.date) >= date_add(now(), interval -12 month)
-                group by date_format(date(sales.date), "%m-%Y")) as sub
+                where date(sales.date) <= datetime('now','localtime') and date(sales.date) >= date(date('now','localtime'), '-12 month')
+                group by strftime("%m-%Y", date(sales.date))) as sub
         '''))
-
+        print(monthly_sales)
         monthly_purchase = list(my_custom_sql('''
         select
-            sum(if(month = 'Jan', total, 0)) as 'Jan',
-            sum(if(month = 'Feb', total, 0)) as 'Feb',
-            sum(if(month = 'Mar', total, 0)) as 'Mar',
-            sum(if(month = 'Apr', total, 0)) as 'Apr',
-            sum(if(month = 'May', total, 0)) as 'May',
-            sum(if(month = 'Jun', total, 0)) as 'Jun',
-            sum(if(month = 'Jul', total, 0)) as 'Jul',
-            sum(if(month = 'Aug', total, 0)) as 'Aug',
-            sum(if(month = 'Sep', total, 0)) as 'Sep',
-            sum(if(month = 'Oct', total, 0)) as 'Oct',
-            sum(if(month = 'Nov', total, 0)) as 'Nov',
-            sum(if(month = 'Dec', total, 0)) as 'Dec'
+            sum(IIF(month = '01', total, 0)) 'Jan',
+            sum(IIF(month = '02', total, 0)) 'Feb',
+            sum(IIF(month = '03', total, 0)) 'Mar',
+            sum(IIF(month = '04', total, 0)) 'Apr',
+            sum(IIF(month = '05', total, 0)) 'May',
+            sum(IIF(month = '06', total, 0)) 'Jun',
+            sum(IIF(month = '07', total, 0)) 'Jul',
+            sum(IIF(month = '08', total, 0)) 'Aug',
+            sum(IIF(month = '09', total, 0)) 'Sep',
+            sum(IIF(month = '10', total, 0)) 'Oct',
+            sum(IIF(month = '11', total, 0)) 'Nov',
+            sum(IIF(month = '12', total, 0)) 'Dec'
             from(
-                select date_format(purchase.date, "%b") as month, sum(purchase.price) as total
+                select strftime('%m', purchase.date) as month, sum(purchase.price) as total
                 from purchase inner join inventory on purchase.ingredient_id = inventory.ingredient_id
-                where date(purchase.date) <= now() and date(purchase.date) >= date_add(now(), interval -12 month)
-                group by date_format(date(purchase.date), "%m-%Y")) as sub
+                where date(purchase.date) <= datetime('now','localtime') and date(purchase.date) >= date(date('now','localtime'), '-12 month')
+                group by strftime("%m-%Y", date(purchase.date))) as sub
         '''))
         print(monthly_purchase)
         monthly_income = []
@@ -480,7 +495,7 @@ def Create_Pdf(request):
         elems.append(gross_income_table)  
         elems.append(Paragraph("",ParagraphStyle("List", spaceAfter =15)))
         print(image_link)
-        image = Image(image_link)
+        image = reportlab.platypus.Image(image_link)
         elems.append(image)
         
     
@@ -498,12 +513,15 @@ def Create_Pdf(request):
         raise Http404()
 
 @api_view(['POST'])
-def get_chart(request):
+def get_chart_sales(request):
 
     if(request.method=='POST'):
-        x=list(my_custom_sql("select Food.name, sum(quantity) from sales join Food on (Food.item_code = sales.item_code) Where (Food.isvisible = 1) group by Food.item_code"))
+        x=list(my_custom_sql("select Food.name, sum(quantity) from sales join Food on (Food.item_code = sales.item_code) Where (Food.isvisible = 1 AND sales.DATE >= date(date('now','localtime'), '-1 month')) group by Food.item_code"))
+        amt = my_custom_sql("select sum(price) from purchase where (DATE >= date(date('now','localtime'), '-1 month'))")
         color = []
         labels, data = zip(*x)
+        labels = list(labels)
+        print(labels, data)
         l = len(data)
         while l>0:
             col ='rgba(' + str(random.randint(0, 200)) + "," + str(random.randint(0,200)) + "," + str(random.randint(0, 200)) + ", 0.5)"
@@ -513,7 +531,29 @@ def get_chart(request):
             else:
                 continue
     
-        return Response({"labels":labels,"datasets":[{"label":"salesreport","data":data, "backgroundColor": color
+        return Response({"labels":labels,"datasets":[{"label":"Amount Spent = {}".format(*amt[0]),"data":data, "backgroundColor": color
+            ,}]})  
+
+@api_view(['POST'])
+def get_chart_purchase(request):
+
+    if(request.method=='POST'):
+        x=list(my_custom_sql("select inventory.name, sum(Purchase.QUANTITY) from purchase join Inventory on (Inventory.ingredient_id = purchase.INGREDIENT_ID) where (DATE >= date(date('now','localtime'), '-1 month')) group by Inventory.ingredient_id"))
+        amt = my_custom_sql("select sum(price) from purchase where (DATE >= date(date('now','localtime'), '-1 month'))")
+        print(amt)
+        color = []
+        labels, data = zip(*x)
+        print(labels, data)
+        l = len(data)
+        while l>0:
+            col ='rgba(' + str(random.randint(0, 200)) + "," + str(random.randint(0,200)) + "," + str(random.randint(0, 200)) + ", 0.5)"
+            if col not in color:
+                color.append(col)
+                l-=1
+            else:
+                continue
+    
+        return Response({"labels":labels,"datasets":[{"label":"Amount Spent = {}".format(amt),"data":data, "backgroundColor": color
             ,}]})             
 
 
@@ -522,8 +562,11 @@ def update_price(request):
     try:
         changed = request.data
         for item in changed:
-            query = "update food set price={} where item_code={}".format(changed[item], item)
-            my_custom_sql(query)
+            """ query = "update food set price={} where item_code={}".format(changed[item], item)
+            my_custom_sql(query) """
+            food = Food.objects.get(item_code = item)
+            food.price = changed[item]
+            food.save()
         return Response("Success")
     except:
         traceback.print_exc()
@@ -532,10 +575,12 @@ def update_price(request):
 @api_view(['POST'])
 def GetFoodsForClerk(request):
     try:
-        print(request.data)
+        """ print(request.data)
         query = 'select UPPER(name), price, image, item_code from food where (isvisible = 1 && (name like "{}" || food.item_code like "{}"))'.format(request.data["val"],request.data["val"])
         print(query)
-        result = list(my_custom_sql(query))   
+        result = list(my_custom_sql(query))    """
+        result = list(Food.objects.filter(isvisible = 1, name__icontains = request.data["val"], item_code__icontains = request.data["val"]).values_list('name', 'price', 'image', 'item_code'))
+        print(result)
         print(result)
         return Response(result)
     except:
@@ -544,21 +589,24 @@ def GetFoodsForClerk(request):
 
 @api_view(['POST'])
 def get_foods(request):
-    query = "select item_code, name, price from food where food.isvisible = 1"
-    result = list(my_custom_sql(query))
+    # query = "select item_code, name, price from food where food.isvisible = 1"
+    # result = list(my_custom_sql(query))
+    result = list(Food.objects.filter(isvisible = 1).values_list('item_code', 'name', 'price'))
+    #print(result)
     return Response(result)
 
 @api_view(['POST'])
 def getingredient_list(request):
     try:
         if(request.method=='POST'):
-            query="select name from inventory"
+            """ query="select name from inventory"
             result = list(my_custom_sql(query))
-            result = [i[0] for i in result]
+            result = [i[0] for i in result] """
+            result = list([i[0] for i in Inventory.objects.all().values_list('name')])
             #print(result)
             return Response(result)
         else:
-            return Response("no inventory")
+            return Response({"no inventory"})
     except:
         traceback.print_exc()
  
@@ -566,13 +614,16 @@ def getingredient_list(request):
 def add_food(request):
     try:
         if(request.method=='POST'):
-            print("all done")
+            #print("all done")
             data=request.data
             ingredientsList = data["nameList"]
             quantityList = data["quantityList"]
             complementaryList=data["complement"]
-            complementDict=dict(my_custom_sql("select name,item_code from food"))
-            ingredientsdict=dict(my_custom_sql("select name,ingredient_id from inventory"))
+            #print(ingredientsList)
+            """ complementDict=dict(my_custom_sql("select name,item_code from food"))
+            ingredientsdict=dict(my_custom_sql("select name,ingredient_id from inventory")) """
+            complementDict = dict(Food.objects.all().values_list('name', 'item_code'))
+            ingredientsdict = dict(Inventory.objects.all().values_list('name', 'ingredient_id'))
             if Food.objects.filter(name=data["foodname"]).exists():
                 return Response(["food already exists","warning"])
             else:
@@ -589,6 +640,7 @@ def add_food(request):
                 complementString = ",".join(complementaryList)
                 new_food = Food(name= data["foodname"].upper(),ingredient_list_id=ingListString,quantity_list=ingquantityString,price=data["price"],isvisible=visibility,complementory_list = complementString)
                 new_food.save()
+                print("finish")
                 return Response(["food created","success"])
     except:
         traceback.print_exc()
@@ -615,9 +667,10 @@ def add_ingredients(request):
         return Response({"can't create ingredients"})
 
 def calculateThreshold(data):
+    print("ed")
     for item in data:
         ingredient_list, quantity_list, complementory_list = list(Food.objects.filter(pk = item[3]).values_list('ingredient_list_id', "quantity_list" ,"complementory_list"))[0]
-                
+        print(ingredient_list, quantity_list, complementory_list)  
         ingredient_list = ingredient_list.split(',')
         quantity_list = quantity_list.split(',')
         if (complementory_list):
@@ -641,6 +694,7 @@ def calculateThreshold(data):
             temp.quantity = float(temp.quantity) - float(item[1]) * float(quantity_list[ingredient])
             temp.thresholdvalue = float(sum(threshold)*(2/3))
             l = set()
+            print(temp.quantity < temp.thresholdvalue)
             if(temp.quantity < temp.thresholdvalue):
                 l.add(temp.name)
                 if PurchaseList.objects.filter(ingredient_name=temp.name).exists():
@@ -661,7 +715,7 @@ def calculateThreshold(data):
                         purchase_list.save()
                 else:
                     PurchaseList(ingredient_name=temp.name, amount=(temp.thresholdvalue - temp.quantity)).save()
-                    #traceback.print_exc()
+                    traceback.print_exc()
                     
 
             temp.save()
@@ -671,11 +725,15 @@ def calculateThreshold(data):
 def get_purchase_list(request):
     if request.method == 'GET':
         try:
-            pur_list = my_custom_sql("select * from PurchaseList where is_ordered=0")
+            #pur_list = my_custom_sql("select * from PurchaseList where is_ordered=0")
+            pur_list = list(PurchaseList.objects.filter(is_ordered = 0).values_list())
+            print(pur_list)
             return Response(pur_list)
         except:
             traceback.print_exc()
-    else:
+            return Response({"No list found"})
+        #return Response({"No list found"})
+    elif request.method == 'POST':
         try:
             #my_custom_sql("update PurchaseList set is_ordered=1")
             for i in PurchaseList.objects.filter(is_ordered = 0):
@@ -692,6 +750,7 @@ def get_purchase_list(request):
             return Response("")
         except:
             traceback.print_exc()
+            return Response("No list found")
 
 global bill_no 
 bill_no = 1
@@ -709,7 +768,7 @@ def bill_generator(request):
         invoice = Invoice(client, provider, creator)
         
         data = request.data["order"] # quantity,price, name
-
+        print(data)
         invoice.currency_locale = 'en_IN'
         invoice.currency = "INR"
         invoice.number = bill_no
@@ -718,7 +777,8 @@ def bill_generator(request):
         
         for item in data:
             invoice.add_item(Item(item[1], item[2]/item[1], description=item[0], tax=14))
-            my_custom_sql("insert into sales(item_code,quantity) values({},{})".format(int(item[3]),item[1]))
+            #my_custom_sql("insert into sales(item_code,quantity) values({},{})".format(int(item[3]),item[1]))
+            Sales(item_code = Food.objects.get(item_code = int(item[3])), quantity = item[1]).save()
             balance += item[2]
             #print("select count(*) from sales where (item_code = {} && date >= {});".format(item[3], str((datetime.today() - timedelta(days=3)).strftime("%Y-%d,%Y"))))
             # count = my_custom_sql("select count(*) from sales where (item_code = {} && date >= {});".format(item[3], str((datetime.today() - timedelta(days=3)).strftime("%Y-%m-%d"))))[0][0]
@@ -744,20 +804,16 @@ def bill_generator(request):
 def generate_check(to, price, filename):
     fontsize = 16
     font = ImageFont.truetype("arial.ttf", fontsize)
+    BASE_DIR = getattr(settings, "BASE_DIR", None)
     today = date.today()
     d = today.strftime("%d")
     m = today.strftime("%m")
     y = today.strftime("%Y")
     price_word = nw(price).replace(",", "") + " only"
     acc_no = "1234567890"
-    path = (
-        Path.home()
-        / "cheque.png"
-    )
-    sign_path = (
-        Path.home()
-        / "signature.png"
-    )
+    path = os.path.join(BASE_DIR,"images/cheque.png")
+    
+    sign_path = os.path.join(BASE_DIR,"images/signature.png")
     img = Image.open(path)
     d1 = ImageDraw.Draw(img)
     d1.text((488, 18), d[0], fill=(0,0,0))
@@ -783,17 +839,22 @@ invoice_no = 1
 @api_view(["POST"])
 def get_Invoice(request):
     if(request.method=='POST'):
+        """ balance = Variable.objects.get(id = 1)
+        print(balance.balance) """
         data=request.data
         ingredientsList = data["nameList"]
         quantityList = data["quantityList"]
         #print(quantityList)
         priceList=data["priceList"]
-        ingredientsdict=dict(my_custom_sql("select name,ingredient_id from inventory"))
+        #ingredientsdict=dict(my_custom_sql("select name,ingredient_id from inventory"))
+        ingredientsdict = dict(Inventory.objects.filter().values_list('name','ingredient_id'))
+        print(ingredientsdict)
         for i in range(0,len(ingredientsList)):
             ingredientsList[i] = str(ingredientsdict[ingredientsList[i]])
-        balance=list(my_custom_sql("select balance from variable"))
-        balance=list(itertools.chain(*balance))
-        actbal=balance[0]
+        """ balance=list(my_custom_sql("select balance from variable"))
+        balance=list(itertools.chain(*balance)) """
+        balance = Variable.objects.get(pk = 7)
+        actbal=balance.balance
         ingredientsList=[int(i) for i in ingredientsList]
         quantityList=[float(i) for i in quantityList]
         #print(quantityList)
@@ -823,9 +884,16 @@ def get_Invoice(request):
                     traceback.print_exc()
             actbal=actbal-gndprice
             #print(actbal)
-            my_custom_sql('update variable SET balance={}'.format(actbal))
+            #my_custom_sql('update variable SET balance={}'.format(actbal))
+            balance = Variable.objects.get(pk = 7)
+            balance.balance = actbal
+            balance.save()
             for i in range(len(ingredientsList)):
-                my_custom_sql('update inventory set quantity=quantity+{} where ingredient_id={}'.format(quantityList[i],ingredientsList[i]))
+                #my_custom_sql('update inventory set quantity=quantity+{} where ingredient_id={}'.format(quantityList[i],ingredientsList[i]))
+                inventory  = Inventory.objects.get(ingredient_id = int(ingredientsList[i]))
+                #print(inventory)
+                inventory.quantity = float(inventory.quantity) + quantityList[i]
+                inventory.save()
             global invoice_no
             filename = "check" + str(invoice_no) + ".jpg"
             generate_check("supplier", gndprice, filename)
@@ -841,18 +909,16 @@ def get_Invoice(request):
 
 @api_view(['POST'])
 def get_complement(request):
-    query = "select name from food where food.isvisible = 0"
-    result = list(my_custom_sql(query))
-    result = [i[0] for i in result]
+    result = list(Food.objects.filter(isvisible = 1).values_list('name')[0])
     return Response(result)
 
 
 @api_view(['POST'])
 def get_Image(request):
-    print(request.data)
+    #print(request.data)
     image=request.FILES.get("image")
     name=str(request.FILES.get("name")).upper()
-    print(name)
+    #print(name)
     food_row=Food.objects.get(name=name)
     food_row.image=image
     food_row.save()
@@ -865,8 +931,7 @@ def delete_food(request):
         try:
             food_row = Food.objects.get(name=current_foodname)
             food_row.delete()
-            query = "select item_code, name, price from food where food.isvisible = 1"
-            result = list(my_custom_sql(query))
+            result = list(Food.objects.filter(isvisible = 1).values_list('item_code', 'name', 'price')[0])
             return Response(result)
         except:
             traceback.print_exc()

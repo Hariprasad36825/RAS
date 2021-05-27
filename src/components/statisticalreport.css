@@ -1,12 +1,40 @@
-.charts {
-  display: flex;
-  flex-direction: row;
-  position: relative;
-  width: 70vh;
-  height: 70vh;
-  justify-content: space-between;
+@media only screen and (min-width: 768px) {
+  .charts {
+    display: flex;
+    flex-direction: row;
+    /* position: relative; */
+    flex-wrap: wrap;
+    flex-flow: row wrap;
+    justify-content: space-between;
+    align-content: space-around;
+    overflow-wrap: inherit;
+  }
+  .ind{
+    padding: 20px;
+    width: 60vh;
+    height: 500px;
+    align-self: auto;
+    flex : 35%;
+  }
+  .charts > div {
+    margin: 5px;
+  }
 }
 
-.charts > div {
-  margin: 50px;
+@media only screen and (max-width: 768px) {
+  .charts {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    width: auto;
+    height: auto;
+    justify-content: space-between;
+  }
+  .charts > div {
+    margin: 5px;
+  }
+  .ind{
+    padding: 20px;
+    align-self: auto;
+  }
 }

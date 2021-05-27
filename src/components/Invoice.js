@@ -105,7 +105,7 @@ class Invoice extends Component {
       method:'POST',
        data:this.state,
        headers: {"X-CSRFToken": csrftoken},
-       responseType: 'json',
+       responseType: 'blob',
       })
       .then((response) => {
         const url = window.URL.createObjectURL(new Blob([response.data]));

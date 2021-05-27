@@ -63,7 +63,7 @@ ROOT_URLCONF = 'RAS.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'build')],
+        'DIRS': [os.path.join(BASE_DIR, 'build'),os.path.join(BASE_DIR, 'staticfiles')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -94,10 +94,11 @@ WSGI_APPLICATION = 'RAS.wsgi.application'
     }
 } '''
 
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'NAME': BASE_DIR / 'ras/db.sqlite3',
     }
 }
 
@@ -146,7 +147,12 @@ django_heroku.settings(locals())
 STATIC_URL = '/static/'
 # Place static in the same location as webpack build files
 #STATIC_ROOT = os.path.join(BASE_DIR, 'build', 'static')
-STATICFILES_DIRS = [os.path.join(BASE_DIR, 'build', 'static')]
+# STATICFILES_DIRS = [os.path.join(BASE_DIR, 'build', 'static')]
+# STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'build/static'),
+]
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 CORS_ORIGIN_WHITELIST = [
@@ -170,4 +176,10 @@ STATICFILES_DIRS = [
 
     os.path.join(BASE_DIR, 'build/static'),
 
+]
+
+REACT_ROUTES = [
+    '',
+    'Demo/',
+    'ForgotPassword',
 ]

@@ -29,7 +29,7 @@ class PurchaseSerializer(serializers.ModelSerializer):
 class VariableSerializer(serializers.ModelSerializer):
     class Meta:
         model = Variable
-        fields = ('balance',)
+        fields = ('balance','id')
         
 class DailyConsumptionSerializer(serializers.ModelSerializer):
     class Meta:

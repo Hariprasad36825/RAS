@@ -105,7 +105,7 @@ class Login extends Component {
           />
           <p className="error">{this.state.pass_error && <i class="fa fa-exclamation-circle fa-s" aria-hidden="true"></i>}{"  "+this.state.pass_error}</p>
           <input type="submit" name="login_submit" value="Submit" />
-          <a href="/ForgotPassword">Forgot password</a>
+          <a href="/#/static/ForgotPassword">Forgot password</a>
         </form>
       </div>
     );

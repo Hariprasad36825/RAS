@@ -1,8 +1,9 @@
 import React, { Component } from "react";
-import { Bar, Doughnut} from "react-chartjs-2";
+import {Doughnut} from "react-chartjs-2";
 import "./statisticalreport.css";
 import axios from "axios";
-import Cookies from 'js-cookie'
+import Cookies from 'js-cookie';
+import Paper from '@material-ui/core/Paper';
 axios.defaults.xsrfHeaderName = "X-CSRFToken"
 axios.defaults.xsrfCookieName = 'csrftoken'
 class Statisticalreport extends Component {
@@ -16,12 +17,21 @@ class Statisticalreport extends Component {
         },
       ],
     },
+    chartdata1: {
+      labels: [],
+      datasets: [
+        {
+          label: "",
+          data: [],
+        },
+      ],
+    },
   };
 
   componentDidMount() {
     const csrftoken = Cookies.get('csrftoken')
     axios({
-      url:'api/GetSalesGraph',
+      url:'api/GetSalesGraphSales',
       method:'POST',
        data:{},
        headers: {"X-CSRFToken": csrftoken},
@@ -33,29 +43,55 @@ class Statisticalreport extends Component {
       })
 
       .catch((error) => console.log(error));
+    axios({
+      url:'api/GetSalesGraphPurchase',
+      method:'POST',
+       data:{},
+       headers: {"X-CSRFToken": csrftoken},
+       responseType: 'json',
+      })
+    .then((response) => {
+        let chartdata = response.data;
+        this.setState({ chartdata1: chartdata });
+      })
+
+      .catch((error) => console.log(error));
   }
 
   render() {
     return (
       <div>
-
       <div className="charts">
-        <div className="first chart">
+      <Paper variant="outlined" className="ind">
+          <Doughnut
+            data={this.state.chartdata1}
+            options={{ 
+              title: {
+                display: true,
+                text: 'MONTHLY PURCHASE'
+              },
+               responsive: true,
+               maintainAspectRatio: false
+             }}
+          />
+      </Paper>
+        <Paper variant="outlined" className="ind">
           <Doughnut
             data={this.state.chartdata}
-            options={{ responsive: true, maintainAspectRatio: false }}
-          />
-        </div>
-        <div className="secondchart">
-          <Bar
-            data={this.state.chartdata}
             options={{
+              title: {
+                display: true,
+                text: 'MONTHLY SALES'
+              },
               responsive: true,
               maintainAspectRatio: false,
-              scales: { yAxes: [{ ticks: { beginAtZero: true } }] },
+              legend:{
+                display:true,
+                position:'top'
+              },
             }}
           />
-        </div>
+        </Paper>
       </div>
       </div>
     );

@@ -3,7 +3,7 @@ import Owner from "./components/Owner.js";
 import Manager from "./components/Manager.js";
 import Clerk from "./components/Clerk.js";
 import CreateUser from "./components/CreateUser.js";
-import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
+import { HashRouter  as Router, Switch, Route } from "react-router-dom";
 import Forgot_password from "./components/forgot_password.js";
 import Otp from "./components/OTP.js";
 import ChangePassword from "./components/ChangePassword.js";
@@ -13,7 +13,7 @@ import LogOut from "./components/logout.js";
 import PrimaryAppBar from "./components/PrimaryAppBar.js";
 
 const Routes = () => (
-  <Router>
+  <Router basename="/static">
     <Switch>
       <Route exact path="/" component={Login} />
       <Route path="/Home" component={Home} />

@@ -20,11 +20,12 @@ from django.conf import settings
 from django.conf.urls.static import static
 from Restaurant import views
 from .views import index
+from django.views.generic import TemplateView
 
  
 urlpatterns = [
-    path('', index, name='index'),
-    path('/Demo', index, name='index'),
+    path('',TemplateView.as_view(template_name='index.html')),
+    #path('ForgotPassword/',TemplateView.as_view(template_name='./build/index.html')),
     path('admin/', admin.site.urls),
     path('api/', include('Restaurant.urls')),
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

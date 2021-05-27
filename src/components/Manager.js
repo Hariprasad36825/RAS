@@ -8,7 +8,9 @@ import FormControlLabel from '@material-ui/core/FormControlLabel';
 import FormControl from '@material-ui/core/FormControl';
 import FormLabel from '@material-ui/core/FormLabel';
 import Button from '@material-ui/core/Button';
-import Cookies from 'js-cookie'
+import Cookies from 'js-cookie';
+import Paper from '@material-ui/core/Paper';
+import "./statisticalreport.css";
 axios.defaults.xsrfHeaderName = "X-CSRFToken"
 axios.defaults.xsrfCookieName = 'csrftoken'
 
@@ -22,17 +24,12 @@ class Manager extends Component {
   };
 
   handleChange = (event) =>{
-    console.log(event.target.name)
+    //console.log(event.target.name)
     this.setState({...this.state, [event.target.name]: event.target.value});
   }
 
   async post()
   {
-    // const instance = axios.create({ timeout: 10000 });
-    // await instance.post("http://localhost:8000/api/CreateExcel",{
-    //     date : this.state.date,
-    //     file : this.state.file
-    //   })
     const csrftoken = Cookies.get('csrftoken')
     axios({
       url:'api/get_excel',
@@ -41,7 +38,6 @@ class Manager extends Component {
         filename: this.state.file
       },
        headers: {"X-CSRFToken": csrftoken},
-       responseType: 'json',
       })
     .then((res)=>{
         fileDownload(res.data, this.state.file+"."+this.state.format);}
@@ -52,7 +48,6 @@ class Manager extends Component {
   handleSubmit = (event) => {
     if(this.state.format === 'pdf')
     {
-      console.log(this.state.date)
       const csrftoken = Cookies.get('csrftoken')
       axios({
         url:'api/CreatePdf',
@@ -62,7 +57,6 @@ class Manager extends Component {
         file : this.state.file,
         },
         headers: {"X-CSRFToken": csrftoken},
-        responseType: 'json',
         })
       .then((res) => {
         const file = new Blob(
@@ -85,15 +79,12 @@ class Manager extends Component {
           file : this.state.file
         },
         headers: {"X-CSRFToken": csrftoken},
-        responseType: 'json',
         })
       .then((res) => {
-        console.log(res)
         fileDownload(res.data, this.state.file+"."+this.state.format);
       });
     }
     else{
-      console.log("hello")
       const csrftoken = Cookies.get('csrftoken')
       axios({
         url:'api/CreateExcel',
@@ -107,7 +98,6 @@ class Manager extends Component {
         })
        .then((res) => {
         var blob = new Blob([res.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-        console.log(blob)
         fileDownload(blob, this.state.file+"."+this.state.format);
        }).catch( err => console.log(err));
     }
@@ -117,12 +107,11 @@ class Manager extends Component {
   render() {
 
     return (
-      <div style={{width: "100%" , overflow: "visible"}}>
-        
-      <div style={{width: "60%", float: "left"}}><Statisticalreport/></div>
-      <div style={{marginLeft: "70%"}}>
+      <div className = "charts">
+      <div><Statisticalreport/></div>
+      <Paper variant="outlined" className = "ind" >
         <h2>Download reports</h2>
-        <form className="generateFile" onSubmit={this.handleSubmit}>
+        <form onSubmit={this.handleSubmit}>
         <p>Enter date:</p>
         <TextField
           onChange = {this.handleChange}
@@ -130,7 +119,6 @@ class Manager extends Component {
           variant="outlined"
           id="outlined-search"
           name="date"
-          //label="From Date" 
           type="date"
           required
         /><br/><br/>
@@ -175,7 +163,7 @@ class Manager extends Component {
         >Submit</Button>
         </form> 
         
-      </div>
+      </Paper>
       </div>
     );
   }

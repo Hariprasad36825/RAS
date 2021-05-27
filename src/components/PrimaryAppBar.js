@@ -4,13 +4,10 @@ import AppBar from '@material-ui/core/AppBar';
 import Toolbar from '@material-ui/core/Toolbar';
 import IconButton from '@material-ui/core/IconButton';
 import Typography from '@material-ui/core/Typography';
-import Badge from '@material-ui/core/Badge';
 import MenuItem from '@material-ui/core/MenuItem';
 import Menu from '@material-ui/core/Menu';
-//import MenuIcon from '@material-ui/icons/Menu';
+import MenuIcon from '@material-ui/icons/Menu';
 import AccountCircle from '@material-ui/icons/AccountCircle';
-import MailIcon from '@material-ui/icons/Mail';
-import NotificationsIcon from '@material-ui/icons/Notifications';
 import MoreIcon from '@material-ui/icons/MoreVert';
 import PropTypes from 'prop-types';
 import Tabs from '@material-ui/core/Tabs';
@@ -31,9 +28,9 @@ const useStyles = makeStyles((theme) => ({
   grow: {
     flexGrow: 1,
   },
-  menuButton: {
+  /* menuButton: {
     marginRight: theme.spacing(2),
-  },
+  }, */
   title: {
     display: 'none',
     [theme.breakpoints.up('sm')]: {
@@ -46,7 +43,7 @@ const useStyles = makeStyles((theme) => ({
   inputInput: {
     padding: theme.spacing(1, 1, 1, 0),
     // vertical padding + font size from searchIcon
-    paddingLeft: `calc(1em + ${theme.spacing(4)}px)`,
+    //paddingLeft: `calc(1em + ${theme.spacing(4)}px)`,
     transition: theme.transitions.create('width'),
     width: '100%',
     [theme.breakpoints.up('md')]: {
@@ -61,12 +58,14 @@ const useStyles = makeStyles((theme) => ({
   },
   sectionMobile: {
     display: 'flex',
+    width: '100%',
     [theme.breakpoints.up('md')]: {
       display: 'none',
     },
   },
   root: {
     flexGrow: 1,
+    width: '100%',
     backgroundColor: theme.palette.background.paper,
   },
 }));
@@ -74,7 +73,7 @@ const useStyles = makeStyles((theme) => ({
 
 
 export default function PrimaryAppBar() {
-  
+  console.log(sessionStorage.getItem('tab'));
     
   const classes = useStyles();
   const [anchorEl, setAnchorEl] = React.useState(null);
@@ -129,22 +128,6 @@ export default function PrimaryAppBar() {
       open={isMobileMenuOpen}
       onClose={handleMobileMenuClose}
     >
-      <MenuItem>
-        <IconButton aria-label="show 4 new mails" color="inherit">
-          <Badge badgeContent={4} color="secondary">
-            <MailIcon />
-          </Badge>
-        </IconButton>
-        <p>Messages</p>
-      </MenuItem>
-      <MenuItem>
-        <IconButton aria-label="show 11 new notifications" color="inherit">
-          <Badge badgeContent={11} color="secondary">
-            <NotificationsIcon />
-          </Badge>
-        </IconButton>
-        <p>Notifications</p>
-      </MenuItem>
       <MenuItem onClick={handleProfileMenuOpen} component={Link} to="/Logout">
         <IconButton
           aria-label="account of current user"
@@ -191,10 +174,12 @@ export default function PrimaryAppBar() {
     };
   }
   
-  const [value, setValue] = React.useState(0);
-
+  const [value, setValue] = React.useState(sessionStorage.getItem('tab') !== null ? parseInt(sessionStorage.getItem('tab')) : 0);
+  console.log(sessionStorage.getItem('tab'));
   const handleChange = (event, newValue) => {
     setValue(newValue);
+    sessionStorage.setItem('tab', newValue);
+    console.log(sessionStorage.getItem('tab'));
   };
   if(!sessionStorage.getItem("type")){
     return (<Redirect to="/" />  ) ; 
@@ -206,26 +191,16 @@ export default function PrimaryAppBar() {
     <div className={classes.grow}>
       <AppBar position="static">
         <Toolbar>
-          {/* <IconButton
-            edge="start"
-            className={classes.menuButton}
-            color="inherit"
-            aria-label="open drawer"
-          >
-            <MenuIcon />
-          </IconButton> */}
-          <Typography className={classes.title} variant="h6" noWrap>
-            <img src = "https://www.ras-systems.com/wp-content/uploads/2020/12/Ras_logo.png" alt = "RAS" className = "logo"/>
-          </Typography>
+          
           <div>{type === 'Owner' &&
-            <Tabs value={value} onChange={handleChange} aria-label="simple tabs example">
+            <Tabs value={value} onChange={handleChange} variant="scrollable" scrollButtons="on" selectionFollowsFocus = {true} aria-label="scrollable auto tabs example">
               <Tab label="Users"  {...a11yProps(0)} />
               <Tab label="Create Users"  {...a11yProps(1)} />
             </Tabs>
           }</div>
 
           <div>{type === 'Manager' &&
-            <Tabs value={value} onChange={handleChange} aria-label="simple tabs example">
+            <Tabs value={value} onChange={handleChange} variant="scrollable" scrollButtons="on" selectionFollowsFocus = {true} aria-label="scrollable auto tabs example">
               <Tab label="Report"  {...a11yProps(0)} />
               <Tab label="Change Price"  {...a11yProps(1)} />
               <Tab label="Edit Food"  {...a11yProps(2)} />
@@ -236,23 +211,14 @@ export default function PrimaryAppBar() {
           
 
           <div>{type === 'Clerk' &&
-            <Tabs value={value} onChange={handleChange} aria-label="simple tabs example">
+            <Tabs value={value} onChange={handleChange} variant="scrollable" scrollButtons="on" selectionFollowsFocus = {true} aria-label="scrollable auto tabs example">
               <Tab label="Order"  {...a11yProps(0)} />
             </Tabs>
           }</div>
           
           <div className={classes.grow} />
           <div className={classes.sectionDesktop}>
-            <IconButton aria-label="show 4 new mails" color="inherit">
-              <Badge badgeContent={4} color="secondary">
-                <MailIcon />
-              </Badge>
-            </IconButton>
-            <IconButton aria-label="show 17 new notifications" color="inherit">
-              <Badge badgeContent={17} color="secondary">
-                <NotificationsIcon />
-              </Badge>
-            </IconButton>
+            
             <IconButton
               edge="end"
               aria-label="account of current user"
