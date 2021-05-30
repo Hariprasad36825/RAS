@@ -1,7 +1,11 @@
 import React, { Component } from "react";
 import axios from "axios";
 import Alert from "./Alert";
-import Cookies from 'js-cookie'
+import Cookies from 'js-cookie';
+import InputLabel from '@material-ui/core/InputLabel';
+import OutlinedInput from '@material-ui/core/OutlinedInput';
+import FormControl from '@material-ui/core/FormControl';
+import classNames from 'classnames';
 axios.defaults.xsrfHeaderName = "X-CSRFToken"
 axios.defaults.xsrfCookieName = 'csrftoken'
 class Otp extends Component {
@@ -47,20 +51,33 @@ class Otp extends Component {
 
   render() {
     return (
-      <div id="login">
-        <div className="changePassword">
-          <form
-            onSubmit={this.handleSubmit}
-            className="createuser"
-            style={{ marginTop: "10%" }}
-          >
-            <input
+      <div className="bg-img">
+        <form
+          onSubmit={this.handleSubmit}
+          className={classNames('login', 'createuser')}
+        >
+          <img
+            src="https://www.fit2work.com.au/assets/img/avatars/LoginIconAppl.png"
+            alt="profilepic"
+            className="avatar"
+          />
+          <h1>OTP</h1>
+          <FormControl variant="outlined">
+            <InputLabel htmlFor="outlined-adornment-password">Enter OTP</InputLabel>
+            <OutlinedInput onChange={this.handleChange}
               type="number"
-              onChange={this.handleChange}
-              value={this.state.number}
-              placeholder="Enter OTP"
+              variant="outlined"
+              margin="normal"
               required
+              fullWidth
+              autoFocus
+              autoComplete='number'
+              name="Email"
+              label="Email"
+              value={this.state.number}
+              style = {{marginBottom : "20px"}}
             />
+          </FormControl>
 
             <Alert
               time="5000"
@@ -71,7 +88,6 @@ class Otp extends Component {
             <input type="submit" name="login_submit" value="submit" />
             <a href="/">Login</a>
           </form>
-        </div>
       </div>
     );
   }

@@ -6,7 +6,6 @@ axios.defaults.xsrfHeaderName = "X-CSRFToken"
 axios.defaults.xsrfCookieName = 'csrftoken'
 class Bill extends Component {
   componentDidMount() {
-    console.log(this.props.data.order);
     const csrftoken = Cookies.get('csrftoken')
     axios({
       url:'api/BillGenerator',
@@ -19,10 +18,9 @@ class Bill extends Component {
         const url = window.URL.createObjectURL(new Blob([response.data]));
         printJS(url);
       })
-      .catch((error) => console.log(error));
+      .catch((error) => {});
   }
   render() {
-    console.log("success")
     return <div />;
   }
 }

@@ -16,21 +16,22 @@ import Box from '@material-ui/core/Box';
 import Users from './Users.js';
 import CreateUser from './CreateUser';
 import { Link, Redirect } from 'react-router-dom';
-import ExitToAppIcon from '@material-ui/icons/ExitToApp';
 import Manager from './Manager.js'
 import ViewFood from './ViewFood.js';
 import Invoice from "./Invoice";
 import PurchaseList from './PurchaseList.js';
 import Ingredients from './Ingredients.js';
 import FoodPrice from './FoodPrice.js';
-
+import TabContext from "@material-ui/lab/TabContext";
 const useStyles = makeStyles((theme) => ({
   grow: {
     flexGrow: 1,
   },
-  /* menuButton: {
-    marginRight: theme.spacing(2),
-  }, */
+  root: {
+    flexGrow: 1,
+    width: '100%',
+    backgroundColor: theme.palette.background.paper,
+  },
   title: {
     display: 'none',
     [theme.breakpoints.up('sm')]: {
@@ -42,8 +43,6 @@ const useStyles = makeStyles((theme) => ({
   },
   inputInput: {
     padding: theme.spacing(1, 1, 1, 0),
-    // vertical padding + font size from searchIcon
-    //paddingLeft: `calc(1em + ${theme.spacing(4)}px)`,
     transition: theme.transitions.create('width'),
     width: '100%',
     [theme.breakpoints.up('md')]: {
@@ -58,23 +57,19 @@ const useStyles = makeStyles((theme) => ({
   },
   sectionMobile: {
     display: 'flex',
-    width: '100%',
     [theme.breakpoints.up('md')]: {
       display: 'none',
     },
   },
-  root: {
-    flexGrow: 1,
-    width: '100%',
-    backgroundColor: theme.palette.background.paper,
+  appbarbackground:
+  {
+    background:'black',
   },
 }));
 
 
 
-export default function PrimaryAppBar() {
-  console.log(sessionStorage.getItem('tab'));
-    
+export default function PrimaryAppBar() {    
   const classes = useStyles();
   const [anchorEl, setAnchorEl] = React.useState(null);
   const [mobileMoreAnchorEl, setMobileMoreAnchorEl] = React.useState(null);
@@ -128,15 +123,7 @@ export default function PrimaryAppBar() {
       open={isMobileMenuOpen}
       onClose={handleMobileMenuClose}
     >
-      <MenuItem onClick={handleProfileMenuOpen} component={Link} to="/Logout">
-        <IconButton
-          aria-label="account of current user"
-          aria-controls="primary-search-account-menu"
-          aria-haspopup="true"
-          color="inherit"
-        >
-        </IconButton>
-        <ExitToAppIcon />
+      <MenuItem onClick={handleMenuClose} component={Link} to="/Logout">
         Logout
       </MenuItem>
     </Menu>
@@ -146,14 +133,14 @@ export default function PrimaryAppBar() {
   
     return (
       <div
-        role="tabpanel"
-        hidden={value !== index}
-        id={`simple-tabpanel-${index}`}
-        aria-labelledby={`simple-tab-${index}`}
-        {...other}
-      >
+      role="tabpanel"
+      hidden={value !== index}
+      id={`scrollable-force-tabpanel-${index}`}
+      aria-labelledby={`scrollable-force-tab-${index}`}
+      {...other}
+    >
         {value === index && (
-          <Box p={3}>
+          <Box>
             <Typography component="div">{children}</Typography>
           </Box>
         )}
@@ -175,11 +162,9 @@ export default function PrimaryAppBar() {
   }
   
   const [value, setValue] = React.useState(sessionStorage.getItem('tab') !== null ? parseInt(sessionStorage.getItem('tab')) : 0);
-  console.log(sessionStorage.getItem('tab'));
   const handleChange = (event, newValue) => {
     setValue(newValue);
     sessionStorage.setItem('tab', newValue);
-    console.log(sessionStorage.getItem('tab'));
   };
   if(!sessionStorage.getItem("type")){
     return (<Redirect to="/" />  ) ; 
@@ -189,59 +174,48 @@ export default function PrimaryAppBar() {
   
   return (
     <div className={classes.grow}>
-      <AppBar position="static">
-        <Toolbar>
-          
-          <div>{type === 'Owner' &&
-            <Tabs value={value} onChange={handleChange} variant="scrollable" scrollButtons="on" selectionFollowsFocus = {true} aria-label="scrollable auto tabs example">
-              <Tab label="Users"  {...a11yProps(0)} />
-              <Tab label="Create Users"  {...a11yProps(1)} />
-            </Tabs>
-          }</div>
+      <AppBar position="static" className={classes.appbarbackground}>
 
-          <div>{type === 'Manager' &&
-            <Tabs value={value} onChange={handleChange} variant="scrollable" scrollButtons="on" selectionFollowsFocus = {true} aria-label="scrollable auto tabs example">
-              <Tab label="Report"  {...a11yProps(0)} />
-              <Tab label="Change Price"  {...a11yProps(1)} />
-              <Tab label="Edit Food"  {...a11yProps(2)} />
-              <Tab label="Add invoice" {...a11yProps(3)} />
-              <Tab label="Purchase list" {...a11yProps(4)} />
-            </Tabs>
-          }</div>
+        {/* <Toolbar> */}
+          {type === 'Owner' &&
+            <div style={{display : "flex"}}>
+              <TabContext>
+                <Tabs value={value} onChange={handleChange} variant="scrollable" scrollButtons="off" selectionFollowsFocus = {true} aria-label="scrollable auto tabs example">
+                  <Tab label="Users"  {...a11yProps(0)} />
+                  <Tab label="Create Users"  {...a11yProps(1)} />
+                </Tabs>
+                <MoreIcon onClick={handleMobileMenuOpen} color="inherit" style={{marginLeft: "auto", marginTop:window.screen.availWidth < 1200 ? "2%" : "0.7%", marginRight: "2%", float :"right"}}/>
+              </TabContext>
+            </div>
+          }
+
+          {type === 'Manager' &&
+          <div style={{display : "flex"}}>
+            <TabContext >
+              <Tabs value={value} onChange={handleChange} variant="scrollable" scrollButtons="off" selectionFollowsFocus = {true} aria-label="scrollable force tabs example">
+                <Tab label="Report"  {...a11yProps(0)} />
+                <Tab label="Change Price"  {...a11yProps(1)} />
+                <Tab label="Food"  {...a11yProps(2)} />
+                <Tab label="Invoice" {...a11yProps(3)} />
+                <Tab label="Purchase List" {...a11yProps(4)} />
+              </Tabs>
+              <MoreIcon onClick={handleMobileMenuOpen} color="inherit" style={{marginLeft: "auto", marginTop:window.screen.availWidth < 1200 ? "2%" : "0.7%", marginRight: "2%", float :"right"}}/>
+            </TabContext>
+          </div>
+          }
           
 
-          <div>{type === 'Clerk' &&
-            <Tabs value={value} onChange={handleChange} variant="scrollable" scrollButtons="on" selectionFollowsFocus = {true} aria-label="scrollable auto tabs example">
-              <Tab label="Order"  {...a11yProps(0)} />
-            </Tabs>
-          }</div>
-          
-          <div className={classes.grow} />
-          <div className={classes.sectionDesktop}>
-            
-            <IconButton
-              edge="end"
-              aria-label="account of current user"
-              aria-controls={menuId}
-              aria-haspopup="true"
-              onClick={handleProfileMenuOpen}
-              color="inherit"
-            >
-              <AccountCircle />
-            </IconButton>
+          {type === 'Clerk' &&
+          <div style={{display : "flex"}}>
+            <TabContext>
+              <Tabs value={value} onChange={handleChange} variant="scrollable" scrollButtons="off" selectionFollowsFocus = {true} aria-label="scrollable auto tabs example">
+                <Tab label="Order"  {...a11yProps(0)} />
+              </Tabs>
+              <MoreIcon onClick={handleMobileMenuOpen} color="inherit" style={{marginLeft: "auto", marginTop:window.screen.availWidth < 1200 ? "2%" : "0.7%", marginRight: "2%", float :"right"}}/>
+            </TabContext>
           </div>
-          <div className={classes.sectionMobile}>
-            <IconButton
-              aria-label="show more"
-              aria-controls={mobileMenuId}
-              aria-haspopup="true"
-              onClick={handleMobileMenuOpen}
-              color="inherit"
-            >
-              <MoreIcon />
-            </IconButton>
-          </div>
-        </Toolbar>
+          }
+        {/* </Toolbar> */}
       </AppBar>
 
       <div>{type === 'Owner' &&

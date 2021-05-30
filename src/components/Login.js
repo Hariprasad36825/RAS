@@ -2,19 +2,37 @@ import React, { Component } from "react";
 import "../App.css";
 import axios from "axios";
 import {Redirect} from 'react-router-dom';
-import Cookies from 'js-cookie'
+import Cookies from 'js-cookie';
+import Visibility from '@material-ui/icons/Visibility';
+import VisibilityOff from '@material-ui/icons/VisibilityOff';
+import InputAdornment from '@material-ui/core/InputAdornment';
+import FormControl from '@material-ui/core/FormControl'
+import IconButton from '@material-ui/core/IconButton';
+import InputLabel from '@material-ui/core/InputLabel';
+import OutlinedInput from '@material-ui/core/OutlinedInput';
+import { createMuiTheme } from "@material-ui/core/styles";
+import { ThemeProvider } from "@material-ui/styles";
+import CssBaseline from "@material-ui/core/CssBaseline";
+import AccountCircleIcon from '@material-ui/icons/AccountCircle';
 axios.defaults.xsrfHeaderName = "X-CSRFToken"
 axios.defaults.xsrfCookieName = 'csrftoken'
+
+
+const theme = createMuiTheme({
+  palette: {
+    type: "dark"
+  }
+});
 
 class Login extends Component {
   state = {
     email: "",
     password: "",
-    type: "password",
-    toggle: "far fa-eye",
     EmailError: "",
     pass_error: "",
+    showPassword: false,
   };
+  
 
   handleChange1 = (event) => {
     this.setState({ email: event.target.value });
@@ -57,14 +75,6 @@ class Login extends Component {
     event.preventDefault();
   };
 
-  handleVisibility = () => {
-    if (this.state.type === "password") {
-      this.setState({ type: "text", toggle: "far fa-eye  fa-lg fa-eye-slash fa-lg" });
-    } else {
-      this.setState({ type: "password", toggle: "far fa-eye fa-lg" });
-    }
-  };
-
   render() {
     if (window.sessionStorage.getItem("email") != null) {
       return (<Redirect to="/Demo" />  ) ;   
@@ -80,29 +90,64 @@ class Login extends Component {
             className="avatar"
           />
           <h1>Login</h1>
-          <p>Email :</p>
-          <input
+          <ThemeProvider theme={theme}>
+            <CssBaseline />
+            <FormControl variant="outlined">
+          <InputLabel htmlFor="outlined-adornment-password">User Name</InputLabel>
+          <OutlinedInput onChange={this.handleChange1}
+            variant="outlined"
+            margin="normal"
+            fullWidth
+            required
+            id="email"
+            label="User Name"
             type="email"
-            placeholder="Enter Email"
-            onChange={this.handleChange1}
+            autoComplete="email"
             value={this.state.email}
-            required
+            style = {{marginBottom : "15px"}}
+            autoFocus
+            endAdornment={
+              <InputAdornment position="end">
+                <AccountCircleIcon />
+              </InputAdornment>
+            }
           />
-          <i className="far fa-user-circle fa-lg"></i>
+          </FormControl>
+          </ThemeProvider>
+          
+          {/* <i className="far fa-user-circle fa-lg"></i> */}
           <p className="error">{this.state.EmailError && <i class="fa fa-exclamation-circle fa-s" aria-hidden="true"></i>}{"  "+this.state.EmailError}</p>
-          <p>Password :</p>
-          <input
-            type={this.state.type}
-            placeholder="Enter Password"
-            onChange={this.handleChange2}
-            value={this.state.password}
+          <ThemeProvider theme={theme}>
+            <CssBaseline />
+          <FormControl variant="outlined">
+          <InputLabel htmlFor="outlined-adornment-password">Password</InputLabel>
+          <OutlinedInput onChange={this.handleChange2}
+            type={this.state.showPassword ? 'text' : 'password'}
+            variant="outlined"
+            margin="normal"
             required
+            fullWidth
+            name="password"
+            label="Password"
+            id="password"
+            value={this.state.password}
+            style = {{marginBottom : "15px"}}
+            endAdornment={
+              <InputAdornment position="end">
+                <IconButton
+                  aria-label="toggle password visibility"
+                  onClick={() => this.setState({showPassword : !this.state.showPassword})}
+                  // onMouseDown={(event) => {event.preventDefault()}}
+                  edge="end"
+                >
+                  {console.log(this.state.showPassword)}
+                  {this.state.showPassword ? <Visibility /> : <VisibilityOff />}
+                </IconButton>
+              </InputAdornment>
+            }
           />
-          <i
-            className={this.state.toggle}
-            id="togglePassword"
-            onClick={this.handleVisibility}
-          />
+          </FormControl>
+          </ThemeProvider>
           <p className="error">{this.state.pass_error && <i class="fa fa-exclamation-circle fa-s" aria-hidden="true"></i>}{"  "+this.state.pass_error}</p>
           <input type="submit" name="login_submit" value="Submit" />
           <a href="/#/static/ForgotPassword">Forgot password</a>

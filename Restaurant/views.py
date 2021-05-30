@@ -81,7 +81,7 @@ def create_user(request):
         
         try:
             data = request.data
-            print(data["type"])
+            # print(data["type"])
             if Login.objects.filter(pk=data["email"]).exists():
                 return Response(['User already exists', "warning"])
             mat = validate_password(data["password"])            
@@ -92,7 +92,7 @@ def create_user(request):
             else:
                 return Response(["Password should be 8-20 characters long and contain atleast 1 special character, lowercase, upperccase character and 1 number", "primary"])
         except:
-            traceback.print_exc()
+            # traceback.print_exc()
             return Response(['db error, user not created', "danger"])
 
 
@@ -199,7 +199,7 @@ def CreateCsv(request):
                     i['name'] = food.name
                 #data = pd.DataFrame(my_custom_sql("SELECT sales.item_code, food.name, sum(sales.quantity) as quantity, sum(food.price*sales.quantity) as COST FROM food inner JOIN sales ON FOOD.ITEM_CODE = SALES.ITEM_CODE where date(sales.date) >= {} group by (food.item_code)".format(request.data['date'])), columns = ["Item Code" , "Food name", "Quatity" , "Cost"])
                 data = pd.DataFrame(query)
-                print(data)
+                # print(data)
             elif request.data['file'] == 'purchase_report':
                 data = pd.DataFrame(my_custom_sql("select purchase.ingredient_id, inventory.name, purchase.quantity, purchase.price, cast(purchase.date as char) from purchase inner join inventory on purchase.ingredient_id = inventory.ingredient_id where purchase.date >= {}".format(request.data['date'])), columns = ["Ingredient Id", "Ingredient name", "Quantity", "Price", "Purchase time"])
             
@@ -227,7 +227,8 @@ def CreateCsv(request):
             #print(response)
             return (response)
         except:
-            traceback.print_exc()
+            # traceback.print_exc()
+            return Response({"db error"})
 
 @api_view(['POST'])
 def CreateExcel(request):
@@ -305,14 +306,17 @@ def CreateExcel(request):
         cur_yr = ["{} {}".format(i, str(curyear)) for i in mon[:curmonth]]
         months.extend(cur_yr)
 
+        
+        plt.figure(figsize=(4,4))
         plt.xlabel("Month")
         plt.ylabel("Income")
         plt.title("Monthly income comparison")
         plt.xticks( rotation=90)
+        plt.yticks(rotation=90)
         plt.axhline(y=0, c='g', linewidth = 1, ls='--')
-        plt.plot(months, monthly_income)
-        plt.savefig("monthly_comparison.png", bbox_inches = "tight")
+        plt.plot(months, monthly_income, marker='o')
         image_link = os.path.join(BASE_DIR,"monthly_comparison.png")
+        plt.savefig(image_link, bbox_inches = "tight")
 
         data = []
         total_sales = sales_data['Cost'].sum()
@@ -336,7 +340,7 @@ def CreateExcel(request):
      
     response = HttpResponse(file_data, content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
     response['Content-Disposition'] = 'attachment;'
-    print(response)
+    # print(response)
     return response
 
 @api_view(['POST'])
@@ -389,8 +393,8 @@ def Create_Pdf(request):
 
     if request.data['file'] == 'sales_report':
         #print("SELECT sales.item_code, food.name, sales.quantity, food.price*sales.quantity as COST , CAST(sales.date AS char) FROM food inner JOIN sales ON FOOD.ITEM_CODE = SALES.ITEM_CODE where date(sales.date) >= {}".format(request.data['date']))
-        print(request.data['date'])
-        print("SELECT sales.item_code, food.name, sales.quantity, food.price*sales.quantity as COST , CAST(sales.date AS char) FROM food inner JOIN sales ON FOOD.ITEM_CODE = SALES.ITEM_CODE where date(sales.date) >= {}".format(request.data['date']))
+        # print(request.data['date'])
+        # print("SELECT sales.item_code, food.name, sales.quantity, food.price*sales.quantity as COST , CAST(sales.date AS char) FROM food inner JOIN sales ON FOOD.ITEM_CODE = SALES.ITEM_CODE where date(sales.date) >= {}".format(request.data['date']))
         sales_data = list(my_custom_sql("SELECT sales.item_code, food.name, sum(sales.quantity) as quantity, sum(food.price*sales.quantity) as COST FROM food inner JOIN sales ON FOOD.ITEM_CODE = SALES.ITEM_CODE where date(sales.date) >= {} group by (food.item_code)".format(request.data['date'])))
         sales_head = ["Item Code" , "Food name", "Quatity" , "Cost"]
         sales_data.insert(0, sales_head)
@@ -432,7 +436,7 @@ def Create_Pdf(request):
                 where date(sales.date) <= datetime('now','localtime') and date(sales.date) >= date(date('now','localtime'), '-12 month')
                 group by strftime("%m-%Y", date(sales.date))) as sub
         '''))
-        print(monthly_sales)
+        # print(monthly_sales)
         monthly_purchase = list(my_custom_sql('''
         select
             sum(IIF(month = '01', total, 0)) 'Jan',
@@ -453,7 +457,7 @@ def Create_Pdf(request):
                 where date(purchase.date) <= datetime('now','localtime') and date(purchase.date) >= date(date('now','localtime'), '-12 month')
                 group by strftime("%m-%Y", date(purchase.date))) as sub
         '''))
-        print(monthly_purchase)
+        # print(monthly_purchase)
         monthly_income = []
         for i in range(12):
             monthly_income.append(float(monthly_sales[0][i])-float(monthly_purchase[0][i]))
@@ -463,9 +467,9 @@ def Create_Pdf(request):
         months = ["{} {}".format(i, str(curyear-1)) for i in mon[curmonth:]]
         cur_yr = ["{} {}".format(i, str(curyear)) for i in mon[:curmonth]]
         months.extend(cur_yr)
-        print(months)
+        # print(months)
 
-        print(monthly_income)
+        # print(monthly_income)
         gross_income_data = []
 
         total_sales = sum([i[3] for i in sales_data])
@@ -494,7 +498,7 @@ def Create_Pdf(request):
         elems.append(Paragraph("Gross Income from "+datetime.strptime(request.data['date'],"%Y-%m-%d").strftime("%d-%m-%Y"),ParagraphStyle("List", parent = getSampleStyleSheet()['Heading1'], alignment = 1,spaceAfter =30)))
         elems.append(gross_income_table)  
         elems.append(Paragraph("",ParagraphStyle("List", spaceAfter =15)))
-        print(image_link)
+        # print(image_link)
         image = reportlab.platypus.Image(image_link)
         elems.append(image)
         
@@ -521,10 +525,10 @@ def get_chart_sales(request):
         color = []
         labels, data = zip(*x)
         labels = list(labels)
-        print(labels, data)
+        # print(labels, data)
         l = len(data)
         while l>0:
-            col ='rgba(' + str(random.randint(0, 200)) + "," + str(random.randint(0,200)) + "," + str(random.randint(0, 200)) + ", 0.5)"
+            col ='rgba(' + str(random.randint(0, 200)) + "," + str(random.randint(0,200)) + "," + str(random.randint(0, 200)) + ", 0.9)"
             if col not in color:
                 color.append(col)
                 l-=1
@@ -540,13 +544,13 @@ def get_chart_purchase(request):
     if(request.method=='POST'):
         x=list(my_custom_sql("select inventory.name, sum(Purchase.QUANTITY) from purchase join Inventory on (Inventory.ingredient_id = purchase.INGREDIENT_ID) where (DATE >= date(date('now','localtime'), '-1 month')) group by Inventory.ingredient_id"))
         amt = my_custom_sql("select sum(price) from purchase where (DATE >= date(date('now','localtime'), '-1 month'))")
-        print(amt)
+        # print(amt)
         color = []
         labels, data = zip(*x)
-        print(labels, data)
+        # print(labels, data)
         l = len(data)
         while l>0:
-            col ='rgba(' + str(random.randint(0, 200)) + "," + str(random.randint(0,200)) + "," + str(random.randint(0, 200)) + ", 0.5)"
+            col ='rgba(' + str(random.randint(0, 200)) + "," + str(random.randint(0,200)) + "," + str(random.randint(0, 200)) + ", 0.9)"
             if col not in color:
                 color.append(col)
                 l-=1
@@ -569,22 +573,21 @@ def update_price(request):
             food.save()
         return Response("Success")
     except:
-        traceback.print_exc()
+        # traceback.print_exc()
         return Response("Db error") 
 
 @api_view(['POST'])
 def GetFoodsForClerk(request):
     try:
-        """ print(request.data)
-        query = 'select UPPER(name), price, image, item_code from food where (isvisible = 1 && (name like "{}" || food.item_code like "{}"))'.format(request.data["val"],request.data["val"])
-        print(query)
-        result = list(my_custom_sql(query))    """
-        result = list(Food.objects.filter(isvisible = 1, name__icontains = request.data["val"], item_code__icontains = request.data["val"]).values_list('name', 'price', 'image', 'item_code'))
-        print(result)
-        print(result)
+        # print(request.data)
+        
+        query = 'select UPPER(name), price, image, item_code from food where (isvisible = 1 AND (name like "%{}%" OR food.item_code like "%{}%"))'.format(request.data["val"],request.data["val"])
+        # print(query)
+        result = list(my_custom_sql(query))   
+        # print(result)
         return Response(result)
     except:
-        traceback.print_exc()
+        # traceback.print_exc()
         return Response({"Db error"}) 
 
 @api_view(['POST'])
@@ -603,12 +606,13 @@ def getingredient_list(request):
             result = list(my_custom_sql(query))
             result = [i[0] for i in result] """
             result = list([i[0] for i in Inventory.objects.all().values_list('name')])
-            #print(result)
+            # print(result)
             return Response(result)
         else:
             return Response({"no inventory"})
     except:
-        traceback.print_exc()
+        # traceback.print_exc()
+        return Response({"Try after some time"})
  
 @api_view(['POST'])
 def add_food(request):
@@ -616,10 +620,12 @@ def add_food(request):
         if(request.method=='POST'):
             #print("all done")
             data=request.data
+            if Food.objects.filter(name = data["foodname"].upper()).exists():
+                return Response(["food already exists try some other name","danger"])
             ingredientsList = data["nameList"]
             quantityList = data["quantityList"]
             complementaryList=data["complement"]
-            #print(ingredientsList)
+            #print(complementaryList)
             """ complementDict=dict(my_custom_sql("select name,item_code from food"))
             ingredientsdict=dict(my_custom_sql("select name,ingredient_id from inventory")) """
             complementDict = dict(Food.objects.all().values_list('name', 'item_code'))
@@ -640,37 +646,30 @@ def add_food(request):
                 complementString = ",".join(complementaryList)
                 new_food = Food(name= data["foodname"].upper(),ingredient_list_id=ingListString,quantity_list=ingquantityString,price=data["price"],isvisible=visibility,complementory_list = complementString)
                 new_food.save()
-                print("finish")
+                # print("finish")
                 return Response(["food created","success"])
     except:
-        traceback.print_exc()
-        return Response(["food created","failure"])
+        # traceback.print_exc()
+        return Response(["food created","danger"])
  
 @api_view(['POST'])
 def add_ingredients(request):
     try: 
         if(request.method=='POST'):
-            data=request.data
-            ingredientsArray = data["newingredients"]
-            ingredientsList = []
-            for i in range(len(ingredientsArray)):
-                ingredientsList.append(ingredientsArray[i]["ingredientname"])
-            for i in range(len(ingredientsList)):
-                if Inventory.objects.filter(name=ingredientsList[i]).exists():
-                    return Response("ingredient already  "+ingredientsList[i].upper()+" exists")
-            for i in range(len(ingredientsList)):
-                new_ing=Inventory(name=(ingredientsList[i].upper()),quantity=0)
-                new_ing.save()
-        return Response({"ingredients created"})
+            data=request.data['name']
+            if (Inventory.objects.filter(name = data.upper()).exists()):
+                return Response({"message":"Ingredient Already Found"})
+            Inventory(name=(data.upper()),quantity=0).save()
+        return Response({"message":"Ingredient Created"})
     except:
-        traceback.print_exc()
-        return Response({"can't create ingredients"})
+        # traceback.print_exc()
+        return Response({"message":"can't create ingredients"})
 
 def calculateThreshold(data):
-    print("ed")
+    # print("ed")
     for item in data:
         ingredient_list, quantity_list, complementory_list = list(Food.objects.filter(pk = item[3]).values_list('ingredient_list_id', "quantity_list" ,"complementory_list"))[0]
-        print(ingredient_list, quantity_list, complementory_list)  
+        # print(ingredient_list, quantity_list, complementory_list)  
         ingredient_list = ingredient_list.split(',')
         quantity_list = quantity_list.split(',')
         if (complementory_list):
@@ -694,20 +693,19 @@ def calculateThreshold(data):
             temp.quantity = float(temp.quantity) - float(item[1]) * float(quantity_list[ingredient])
             temp.thresholdvalue = float(sum(threshold)*(2/3))
             l = set()
-            print(temp.quantity < temp.thresholdvalue)
             if(temp.quantity < temp.thresholdvalue):
                 l.add(temp.name)
                 if PurchaseList.objects.filter(ingredient_name=temp.name).exists():
                     if PurchaseList.objects.filter(ingredient_name=temp.name , is_ordered = 1).exists():
                         ordered_list = PurchaseList.objects.get(ingredient_name=temp.name, is_ordered = 1)
-                        print(ordered_list)
+                        
                         try:
                             purchase_list = PurchaseList.objects.get(ingredient_name=temp.name, is_ordered = 0)
                             purchase_list.amount = (temp.thresholdvalue - temp.quantity) - ordered_list.amount
                             purchase_list.save()
                         except:
-                            traceback.print_exc()
-                            print(ordered_list.amount)
+                            # traceback.print_exc()
+                            # print(ordered_list.amount)
                             PurchaseList(ingredient_name=temp.name, amount=((temp.thresholdvalue - temp.quantity) - ordered_list.amount)).save()
                     else:
                         purchase_list = PurchaseList.objects.get(ingredient_name=temp.name)
@@ -715,7 +713,7 @@ def calculateThreshold(data):
                         purchase_list.save()
                 else:
                     PurchaseList(ingredient_name=temp.name, amount=(temp.thresholdvalue - temp.quantity)).save()
-                    traceback.print_exc()
+                    # traceback.print_exc()
                     
 
             temp.save()
@@ -727,10 +725,10 @@ def get_purchase_list(request):
         try:
             #pur_list = my_custom_sql("select * from PurchaseList where is_ordered=0")
             pur_list = list(PurchaseList.objects.filter(is_ordered = 0).values_list())
-            print(pur_list)
+            # print(pur_list)
             return Response(pur_list)
         except:
-            traceback.print_exc()
+            # traceback.print_exc()
             return Response({"No list found"})
         #return Response({"No list found"})
     elif request.method == 'POST':
@@ -740,7 +738,7 @@ def get_purchase_list(request):
                 #print(i.ingredient_name)
                 if PurchaseList.objects.filter(ingredient_name=i.ingredient_name , is_ordered = 1).exists():
                     purchase_list = PurchaseList.objects.get(ingredient_name=i.ingredient_name, is_ordered = 1)
-                    print(purchase_list.ingredient_name)
+                    # print(purchase_list.ingredient_name)
                     purchase_list.amount += i.amount
                     purchase_list.save()
                     i.delete()
@@ -749,7 +747,7 @@ def get_purchase_list(request):
                     i.save()
             return Response("")
         except:
-            traceback.print_exc()
+            # traceback.print_exc()
             return Response("No list found")
 
 global bill_no 
@@ -768,7 +766,7 @@ def bill_generator(request):
         invoice = Invoice(client, provider, creator)
         
         data = request.data["order"] # quantity,price, name
-        print(data)
+        # print(data)
         invoice.currency_locale = 'en_IN'
         invoice.currency = "INR"
         invoice.number = bill_no
@@ -783,8 +781,9 @@ def bill_generator(request):
             #print("select count(*) from sales where (item_code = {} && date >= {});".format(item[3], str((datetime.today() - timedelta(days=3)).strftime("%Y-%d,%Y"))))
             # count = my_custom_sql("select count(*) from sales where (item_code = {} && date >= {});".format(item[3], str((datetime.today() - timedelta(days=3)).strftime("%Y-%m-%d"))))[0][0]
                 
-        Variable.objects.all().delete()
-        Variable(balance=balance).save()
+        variable = Variable.objects.get(pk=11)
+        variable.balance = balance
+        variable.save()
         filename = "invoice"+str(bill_no)+".pdf"
         pdf = SimpleInvoice(invoice)
         pdf.gen(filename, generate_qr_code=True)
@@ -848,12 +847,12 @@ def get_Invoice(request):
         priceList=data["priceList"]
         #ingredientsdict=dict(my_custom_sql("select name,ingredient_id from inventory"))
         ingredientsdict = dict(Inventory.objects.filter().values_list('name','ingredient_id'))
-        print(ingredientsdict)
+        # print(ingredientsdict)
         for i in range(0,len(ingredientsList)):
             ingredientsList[i] = str(ingredientsdict[ingredientsList[i]])
         """ balance=list(my_custom_sql("select balance from variable"))
         balance=list(itertools.chain(*balance)) """
-        balance = Variable.objects.get(pk = 7)
+        balance = Variable.objects.get(pk = 11)
         actbal=balance.balance
         ingredientsList=[int(i) for i in ingredientsList]
         quantityList=[float(i) for i in quantityList]
@@ -862,7 +861,7 @@ def get_Invoice(request):
         # for index in range(len(priceList)):
         #     priceList[index]=(quantityList[index])*(priceList[index])
         gndprice=sum(priceList)
-        print(gndprice)
+        # print(gndprice)
         if(gndprice>actbal):
             return Response("Insufficient balance")
         else:
@@ -881,11 +880,12 @@ def get_Invoice(request):
                         purchase_list.is_ordered = 0
                         purchase_list.save()
                 except:
-                    traceback.print_exc()
+                    # traceback.print_exc()
+                    pass
             actbal=actbal-gndprice
             #print(actbal)
             #my_custom_sql('update variable SET balance={}'.format(actbal))
-            balance = Variable.objects.get(pk = 7)
+            balance = Variable.objects.get(pk = 11)
             balance.balance = actbal
             balance.save()
             for i in range(len(ingredientsList)):
@@ -909,7 +909,10 @@ def get_Invoice(request):
 
 @api_view(['POST'])
 def get_complement(request):
-    result = list(Food.objects.filter(isvisible = 1).values_list('name')[0])
+    query = "select name from food where food.isvisible = 0"
+    result = list(my_custom_sql(query))
+    result = [i[0] for i in result]
+    # print(result)
     return Response(result)
 
 
@@ -934,5 +937,5 @@ def delete_food(request):
             result = list(Food.objects.filter(isvisible = 1).values_list('item_code', 'name', 'price')[0])
             return Response(result)
         except:
-            traceback.print_exc()
+            # traceback.print_exc()
             return Response("Try again later")

@@ -5,13 +5,13 @@ import GridListTile from '@material-ui/core/GridListTile';
 import GridListTileBar from '@material-ui/core/GridListTileBar';
 import ListSubheader from '@material-ui/core/ListSubheader';
 import IconButton from '@material-ui/core/IconButton';
-import FastfoodIcon from '@material-ui/icons/Fastfood';
 import axios from 'axios';
 import TextField from '@material-ui/core/TextField';
 import Tables from './ManageTables';
 import SearchIcon from '@material-ui/icons/Search';
 import InputAdornment from '@material-ui/core/InputAdornment';
 import Cookies from 'js-cookie'
+import { Paper } from '@material-ui/core';
 axios.defaults.xsrfHeaderName = "X-CSRFToken"
 axios.defaults.xsrfCookieName = 'csrftoken'
 
@@ -25,6 +25,7 @@ const useStyles = makeStyles((theme) => ({
     backgroundSize: '100%',
     margin: theme.spacing(1),
     padding: '0.8%',
+
   },
   gridList: {
     width: 950,
@@ -52,8 +53,7 @@ export default function ViewFood() {
      function updateFoodList(){
        if(localStorage.getItem(localStorage.getItem("curTable"))){
         setFoodList(JSON.parse(localStorage.getItem(localStorage.getItem("curTable"))))
-        //setCurTable(parseInt(localStorage.getItem("curTable")))
-        console.log(food_list)
+        //setCurTable(parseInt(localStorage.getItem("curTable"))
        }
        else{
          setFoodList({})
@@ -61,9 +61,6 @@ export default function ViewFood() {
      }
    updateFoodList();
    },[])
-        
-   console.log(food_list)
-
   async function fetchFood() {
     const csrftoken = Cookies.get('csrftoken')
     axios({
@@ -75,38 +72,29 @@ export default function ViewFood() {
       })
         .then((res) => {
             setValue(res.data)
-            
-            console.log(res.data)
         });
     }
 
     useEffect (() => {
       if (localStorage.getItem("curTable")){
         let food = temp;
-        console.log(temp)
-        console.log(food_list)
         if ((Object.keys(food_list).length === 0)){
           let update_food_list = food_list
           update_food_list[food[0]] = food
           setFoodList(update_food_list)
-          console.log(food_list)
         }
         else if (!(Object.keys(food_list).includes(food[0]))){
           let update_food_list = food_list
           update_food_list[food[0]] = food
           setFoodList(update_food_list)
-          console.log(food_list)
         }
         else{
-          let update_food_list = food_list
-          console.log(food_list)
+          let update_food_list = food_list;
           update_food_list[food[0]][1] += 1
           update_food_list[food[0]][2] += food[2]
           setFoodList(update_food_list)
         }
-        console.log(food_list)
         localStorage.setItem(localStorage.getItem("curTable"),JSON.stringify(food_list))
-        console.log(localStorage)
         setdoChanges(1)
       }
     },[food_list])
@@ -126,14 +114,12 @@ export default function ViewFood() {
     useEffect (() => {
       if(localStorage.getItem(localStorage.getItem("curTable"))){
         setFoodList(JSON.parse(localStorage.getItem(localStorage.getItem("curTable"))))
-        console.log(food_list)
        }
        else{
          setFoodList({})
          
        }
       setdoclear(0)
-      console.log(food_list)
     },[doclear]
     )
 
@@ -174,6 +160,7 @@ export default function ViewFood() {
   return (
     <>
     <div className={classes.root} >
+      <Paper style={{width:"70%", marginBottom:'10px',padding: '0.5%'}} variant="outlined">
       <TextField 
           id="outlined-search" 
           label="Search field" 
@@ -182,7 +169,7 @@ export default function ViewFood() {
           onChange={handleChange}
           value = {changes}
           variant="outlined"
-          style = {{width : "80%"}} 
+          style = {{width : "100%"}} 
           InputProps={{
             endAdornment: (
               <InputAdornment>
@@ -192,12 +179,13 @@ export default function ViewFood() {
               </InputAdornment>
             )
           }}
-        />    
-        </div>
+        /> 
+      </Paper>   
+    </div>
     <div class="flex-container">
       <div className="flex-item-left" className={classes.root} ><Tables/></div>
       <div className="flex-item-right" className={classes.root}>
-        <GridList cellHeight={300}  cols={3} spacing={30} className={classes.gridList}>
+        <GridList cellHeight={300}  cols={window.screen.availWidth < 1200 ? 2 : 3} spacing={30} className={classes.gridList}>
           <GridListTile key="Subheader" cols={3}style={{ height: 'auto' }}>
             <ListSubheader component="div"></ListSubheader>
           </GridListTile >
@@ -207,11 +195,6 @@ export default function ViewFood() {
               <GridListTileBar
                 title={tile[3]+" - "+tile[0]}
                 subtitle={"Price : ₹ " + tile[1]}
-                actionIcon={
-                  <IconButton aria-label={`info about ${tile.title}`} className={classes.icon} > 
-                    <FastfoodIcon/>
-                  </IconButton>
-                }
               />
             </GridListTile>
           ))}

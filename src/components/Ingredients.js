@@ -1,9 +1,11 @@
 import axios from "axios";
 import React, { Component } from "react";
-import "./Addfooditems.css";
 import Alert from "./Alert.js";
 import Complement from "./Complement";
-import Cookies from 'js-cookie'
+import Cookies from 'js-cookie';
+import DeleteIcon from '@material-ui/icons/Delete';
+import AddCircleIcon from '@material-ui/icons/AddCircle';
+import {FormControl, FormLabel, RadioGroup, FormControlLabel, Radio, InputLabel, OutlinedInput, Select, MenuItem, Button} from '@material-ui/core';
 axios.defaults.xsrfHeaderName = "X-CSRFToken"
 axios.defaults.xsrfCookieName = 'csrftoken'
 
@@ -11,18 +13,19 @@ class Ingredients extends Component {
   state = {
     availablefood: [],
     foodname: "",
-    price: 0,
+    price: '',
     priceclass: "visible",
-    nameList: ["OIL"],
-    quantityList: [1],
-    newingredients: [{ ingredientname: "" }],
+    nameList: [],
+    quantityList: [],
+    newingredients: "",
     addNew: false,
     show: false,
     message: "",
     class: "",
     availableComplement: [],
-    complement: ["CHUTNEY"],
+    complement: [],
     selectedImage: null,
+    val: 0,
   };
 
   handleSelectedImage = (event) => {
@@ -47,65 +50,39 @@ class Ingredients extends Component {
     this.setState({ newingredients: values });
   };
 
-  handlenewdelete = () => {
-    const values = [...this.state.newingredients];
+  handlenewdelete = (event, index) => {
+    let values = this.state.newingredients.slice();
+    //const values = [...this.state.newingredients];
 
-    if (values.length !== 1) values.pop();
+    if (values.length !== 0) values.splice(index, 1);
 
     this.setState({ newingredients: values });
   };
 
   handleNew = (event) => {
-    let j;
-    let k;
-    let flag = 0;
-
-    for (j = 0; j < this.state.newingredients.length; j++) {
-      for (k = j + 1; k < this.state.newingredients.length; k++) {
-        if (
-          this.state.newingredients[j]["ingredientname"] ===
-            this.state.newingredients[k]["ingredientname"] ||
-          this.state.newingredients[j]["ingredientname"].length === 0
-        ) {
-          flag = 1;
-          break;
-        }
-      }
-
-      if (flag === 1) break;
-    }
-
-    if (flag === 1) {
-      alert("same ingredients given ");
-      const r = ["same items given", "warning"];
-      this.setState({ addNew: false, show: true, message: r[0], class: r[1] });
-    }
-    if (flag === 0) {
+    if(this.state.newingredients !== ""){
       const csrftoken = Cookies.get('csrftoken')
       axios({
         url:'api/AddIngredients',
         method:'POST',
-        data:this.state,
+        data:{name:this.state.newingredients},
         headers: {"X-CSRFToken": csrftoken},
         responseType: 'json',
       })
         .then((res) => {
-          this.setState({ show: false });
           this.setState({
-            addNew: false,
             show: true,
-            message: res.data[0],
-            class: res.data[1],
+            message: res.data["message"],
+            class: res.data.message === "Ingredient Created" ? "success":"danger",
           });
-          this.getIngredients();
         });
-
-      event.preventDefault();
+        window.location.reload()
     }
-
-    this.setState({ addNew: false, show: false, message: "", class: "" });
-
-    event.preventDefault();
+    else{
+      this.setState({message: "Enter valid Ingredient Name"});
+      this.setState({show: true});
+      this.setState({class: "warning"});
+    }
   };
 
   getIngredients = () => {
@@ -125,7 +102,7 @@ class Ingredients extends Component {
         }
       })
 
-      .catch((error) => console.log(error));
+      .catch((error) => {});
   };
   componentDidMount() {
     this.getIngredients();
@@ -154,7 +131,7 @@ class Ingredients extends Component {
   };
 
   handleopenprice = () => {
-    this.setState({ complement: ["CHUTNEY"] });
+    this.setState({ complement: [] });
     this.setState({ priceclass: "visible" });
   };
 
@@ -194,7 +171,7 @@ class Ingredients extends Component {
   handledelete = (index) => {
     let values = this.state.nameList.slice();
     let quantity = this.state.quantityList.slice();
-    if (values.length !== 1 && quantity.length !== 1) {
+    if (values.length !== 0 && quantity.length !== 0) {
       values.splice(index, 1);
       quantity.splice(index, 1);
     }
@@ -224,13 +201,13 @@ class Ingredients extends Component {
           message: res.data[0],
           class: res.data[1],
         });
-
+        console.log(this.state.selectedImage);
         if (
           this.state.priceclass === "visible" &&
-          this.state.message === "food created"
+          this.state.message === "food created" && 
+          this.state.selectedImage
         ) {
           const fd = new FormData();
-          console.log(this.state.selectedImage);
           fd.append(
             "image",
             this.state.selectedImage,
@@ -246,9 +223,11 @@ class Ingredients extends Component {
               responseType: 'json',
               })
             .then((res) => {
-            console.log(res.data);
           });
+          
+          window.location.reload()
         }
+        
       });
 
     this.setState({ addNew: false, show: false, message: "", class: "" });
@@ -269,212 +248,156 @@ class Ingredients extends Component {
 
   handleRemoveComplement = (index) => {
     let values = this.state.complement.slice();
-    if (values.length !== 1) {
+    if (values.length !== 0) {
       values.splice(index, 1);
     }
     this.setState({ complement: values });
   };
 
+  change = () => {
+    this.setState({ val: this.state.val ? 0 : 1 });
+    this.state.val ? this.handleopenprice() : this.handlecloseprice();
+  }
+
   render() {
     return (
-      <div className="addfood ">
-        <h1 className="title">ADD FOOD</h1>
-        <br />
-        <br />
-        <br />
-        <div>
-          <form onSubmit={this.handlesubmit} className="contact-form row">
-            <div className="form-field col-lg-12">
-              <label className="label">
-                foodname:
-                <input
-                  className="input-text js-input"
-                  type="text"
-                  onChange={this.handlefoodname}
-                  value={this.state.foodname}
-                  placeholder="foodname"
-                  required
-                />
-              </label>
-            </div>
-            <div className="form-field col-5">
-              <label className="label" htmlFor="complementary">
-                complementary
-                <input
-                  type="radio"
-                  id="complementary"
-                  name="fooditem"
-                  value="complementary"
-                  onClick={this.handlecloseprice}
-                ></input>
-              </label>
-            </div>
-            <div className="form-field col-5">
-              <label className="label" htmlFor="fooditem">
-                fooditem
-                <input
-                  type="radio"
-                  id="fooditem"
-                  name="fooditem"
-                  value="food"
-                  onClick={this.handleopenprice}
-                  defaultChecked="true"
-                ></input>
-              </label>
-            </div>
-            <div className="form-field col-lg-12">
-              <span className={this.state.priceclass}>
-                <label className="label">
-                  price:
-                  <input
-                    className="input-text js-input"
-                    type="number"
-                    onChange={this.handleprice}
-                    min="0"
-                    step="any"
-                  ></input>
-                </label>
-              </span>
-            </div>
-            {this.state.priceclass === "visible" && (
-              <Complement
-                complement={this.state.complement}
-                availableComplement={this.state.availableComplement}
-                addComplement={(e) => this.handleAddComplement(e)}
-                removeComplement={(index) => this.handleRemoveComplement(index)}
-                handleComplementName={(event, index) =>
-                  this.handleComplementName(event, index)
-                }
-                handleImage={(event) => this.handleSelectedImage(event)}
-              />
-            )}
-            {this.state.nameList.map((name, index) => {
-              return (
-                <div key={index} className="dropdowns form-field col-12">
-                  <label>
-                    {console.log(this.state.nameList[index])}
-                    ingredient name:
-                    <select
+      <div >
+        <form onSubmit={this.handlesubmit} className="login" style={{marginTop: window.screen.availWidth < 1200 ? "5%" : "1%", width: window.screen.availWidth < 1400 ? "95%" : "30%",overflowY: "scroll"}}>
+          <h1>ADD FOOD</h1>
+          <FormControl variant="outlined">
+            <InputLabel htmlFor="outlined-adornment-password">Food Name</InputLabel>
+            <OutlinedInput
+              onChange = {this.handlefoodname}
+              value = {this.state.foodname}
+              variant="outlined"
+              id="outlined-search"
+              name="Food Name"
+              label="Food Name"
+              type="text"
+              required
+              autoFocus
+              style = {{marginBottom : "15px"}}
+            />
+          </FormControl>
+
+          <FormControl component="fieldset" style = {{marginBottom : "15px"}}>
+            <FormLabel component="legend">complementary</FormLabel>
+            <RadioGroup aria-label="gender" name="complementary" value={this.state.val} onChange={this.change} row>
+              <FormControlLabel value={0} control={<Radio />} label="Food Item" labelPlacement="bottom"/>
+              <FormControlLabel value={1} control={<Radio />} label="Complementary" labelPlacement="bottom"/>
+            </RadioGroup>
+          </FormControl>
+          
+        {this.state.priceclass === 'visible' && <FormControl variant="outlined">
+          <InputLabel htmlFor="outlined-adornment-password">price</InputLabel>
+          <OutlinedInput onChange={this.handleprice}
+            variant="outlined"
+            margin="normal"
+            fullWidth
+            required
+            id="Price"
+            label="Price"
+            type="number"
+            autoComplete="number"
+            value={this.state.price}
+            style = {{marginBottom : "15px"}}
+          />
+        </FormControl>}
+            
+          {this.state.priceclass === "visible" && (
+            <Complement
+              complement={this.state.complement}
+              availableComplement={this.state.availableComplement}
+              addComplement={(e) => this.handleAddComplement(e)}
+              removeComplement={(index) => this.handleRemoveComplement(index)}
+              handleComplementName={(event, index) =>
+                this.handleComplementName(event, index)
+              }
+              handleImage={(event) => this.handleSelectedImage(event)}
+            />
+          )}
+          {this.state.nameList.map((name, index) => {
+            return (
+              <div key={index} style = {{display:"flex"}}>
+                  <FormControl variant="outlined" style = {{width:"100%", marginRight: "5px", marginBottom: "5%"}}>
+                    <InputLabel id="demo-simple-select-outlined-label">Ingredient</InputLabel>
+                    <Select
+                      labelId="demo-simple-select-outlined-label"
                       id={index}
                       value={this.state.nameList[index]}
-                      onChange={(event) => {
-                        this.handleName(event, index);
-                      }}
+                      onChange={(event) => {this.handleName(event, index)}}
+                      label="Age"
+                      overflow = "hidden"
                     >
+                      <MenuItem value="">
+                        <em>None</em>
+                      </MenuItem>
                       {this.state.availablefood
                         .filter(this.checkAvailable(index))
-                        .map((item, i) => {
-                          return (
-                            <option key={index * 1000 + i} value={item}>
-                              {item.toUpperCase()}
-                            </option>
-                          );
-                        })}
-                    </select>
-                  </label>
-                  <label>
-                    quantity:
-                    <input
+                        .map((item, i) => (
+                          <MenuItem key={index * 1000 + i} value={item}>{item.toString().toUpperCase()}</MenuItem>
+                        ))}
+                    </Select>
+                  </FormControl>
+                  <FormControl variant="outlined">
+                    <InputLabel htmlFor="outlined-adornment-password">Quantity</InputLabel>
+                    <OutlinedInput onChange={(event) => {this.handleQuantity(event, index);}}
+                      variant="outlined"
+                      margin="normal"
+                      fullWidth
+                      required
+                      id="quantity"
+                      label="quantity"
                       type="number"
-                      name="quantity"
-                      value={this.state.quantityList[index]}
-                      onChange={(event) => {
-                        this.handleQuantity(event, index);
-                      }}
+                      autoComplete="number"
                       step="any"
                       min="0.0001"
-                      required
+                      overflow = "hidden"
+                      value={this.state.quantityList[index]}
+                      style = {{width:"100%", marginRight: "5px"}}
                     />
-                  </label>
-                  {index !== 0 && (
-                    <button
-                      type="button"
-                      className="removebtn"
-                      onClick={() => this.handledelete(index)}
-                    >
-                      <i class="fa fa-trash" />
-                    </button>
-                  )}
-                </div>
-              );
-            })}
-            <div className="form-field col-lg-12">
-              <button
-                className="add-btn"
-                type="button"
-                onClick={(e) => this.handleadd(e)}
-              >
-                add
-              </button>
-            </div>
-            <div className="form-field col-lg-12">
-              <div className="container">
-                <input
-                  className="submit-btn"
-                  type="submit"
-                  value="create food"
-                />
+                  </FormControl>
+                  <DeleteIcon style = {{color:"red", fontSize: "30px"}} onClick={() => this.handledelete(index)}/>
               </div>
-            </div>
-          </form>
-
-          <Alert
-            show={this.state.show}
-            time="5000"
-            type={this.state.class}
-            message={this.state.message}
+            );
+          })}
+          <Button onClick={(e) => this.handleadd(e)} variant="contained" style = {{backgroundColor: "green", color : "white", marginBottom:"15px"}}>
+            <AddCircleIcon/>{" Add Ingredient"}
+          </Button>
+          <input
+            className="submit-btn"
+            type="submit"
+            value="create food"
+            style = {{width: "70%", marginLeft:"15%", marginBottom: "20px"}}
           />
-        </div>
+          <h1>Create Ingredient</h1>
+            <div style={{display:"flex"}}>
+              <FormControl variant="outlined">
+                <InputLabel htmlFor="outlined-adornment-password">Ingredient Name</InputLabel>
+                <OutlinedInput onChange={(event) => {this.setState({newingredients: event.target.value})}}
+                  variant="outlined"
+                  margin="normal"
+                  fullWidth
+                  id="Ingredient Name"
+                  label="Ingredient Name"
+                  type="text"
+                  autoComplete="text"
+                  overflow = "hidden"
+                  value={this.state.newingredients}
+                  style = {{width:"100%", marginRight: "5px", marginBottom: "10px"}}
+                />
+              </FormControl>
+            </div>
+          <input className="add-btn" type="button" value="Add" style = {{width: "70%", marginLeft:"15%"}} onClick={this.handleNew}/>
+        </form>
 
-        <div>
-          <form className="contact-form row" onSubmit={this.handleNew}>
-            {this.state.newingredients.map((inputfield, index) => {
-              return (
-                <div key={index} className="form-field col-lg-6">
-                  <div className="form-field col-lg-12">
-                    <label className="label">
-                      ingredientname:
-                      <input
-                        type="text"
-                        name="ingredientname"
-                        className="input-text js-input"
-                        value={this.state.newingredients[index].ingredientname}
-                        onChange={(event) => {
-                          this.handlenewingredients(index, event);
-                        }}
-                        required
-                      />
-                    </label>
-                  </div>
-                </div>
-              );
-            })}
-            <div className="form-field col-3">
-              <button
-                type="button"
-                className="add-btn"
-                onClick={this.handlenewadd}
-              >
-                add
-              </button>
-            </div>
-            <div className="form-field col-3">
-              <button
-                className="add-btn"
-                type="button"
-                onClick={this.handlenewdelete}
-              >
-                remove
-              </button>
-            </div>
-            <div className="form-field col-lg-12">
-              <div className="container">
-                <input className="add-btn" type="submit" value="Add" />
-              </div>
-            </div>
-          </form>
-        </div>
-      </div>
+        <Alert
+          show={this.state.show}
+          time="5000"
+          type={this.state.class}
+          message={this.state.message}
+        />
+    </div>
     );
   }
 }

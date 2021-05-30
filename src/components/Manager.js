@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import axios from 'axios';
-import Statisticalreport from "./statisticalreport";
+import {Doughnut} from "react-chartjs-2";
 import TextField from '@material-ui/core/TextField';
 import Radio from '@material-ui/core/Radio';
 import RadioGroup from '@material-ui/core/RadioGroup';
@@ -20,11 +20,59 @@ class Manager extends Component {
   state = {
     date : "",
     file : "sales_report",
-    format: "pdf"
+    format: "pdf",
+    chartdata: {
+      labels: [],
+      datasets: [
+        {
+          label: "",
+          data: [],
+        },
+      ],
+    },
+    chartdata1: {
+      labels: [],
+      datasets: [
+        {
+          label: "",
+          data: [],
+        },
+      ],
+    },
   };
 
+  componentDidMount() {
+    const csrftoken = Cookies.get('csrftoken')
+    axios({
+      url:'api/GetSalesGraphSales',
+      method:'POST',
+       data:{},
+       headers: {"X-CSRFToken": csrftoken},
+       responseType: 'json',
+      })
+    .then((response) => {
+        let chartdata = response.data;
+        this.setState({ chartdata: chartdata });
+      })
+
+      .catch((error) => {});
+    axios({
+      url:'api/GetSalesGraphPurchase',
+      method:'POST',
+       data:{},
+       headers: {"X-CSRFToken": csrftoken},
+       responseType: 'json',
+      })
+    .then((response) => {
+        let chartdata = response.data;
+        this.setState({ chartdata1: chartdata });
+      })
+
+      .catch((error) => {});
+  }
+
+
   handleChange = (event) =>{
-    //console.log(event.target.name)
     this.setState({...this.state, [event.target.name]: event.target.value});
   }
 
@@ -63,7 +111,6 @@ class Manager extends Component {
               [res.data], 
               {type: 'application/pdf'});
             const fileURL = URL.createObjectURL(file);
-            //console.log(fileURL)
             window.open(fileURL,"Mypdf.pdf");
       });  
     }
@@ -99,7 +146,7 @@ class Manager extends Component {
        .then((res) => {
         var blob = new Blob([res.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
         fileDownload(blob, this.state.file+"."+this.state.format);
-       }).catch( err => console.log(err));
+       }).catch( err => {});
     }
     event.preventDefault()
   }
@@ -108,8 +155,49 @@ class Manager extends Component {
 
     return (
       <div className = "charts">
-      <div><Statisticalreport/></div>
-      <Paper variant="outlined" className = "ind" >
+      <Paper variant="outlined" className="ind" style = {{background: "rgba(0, 0, 0, 0.85)"}}>
+          <Doughnut
+            data={this.state.chartdata1}
+            options={{ 
+              title: {
+                display: true,
+                text: 'MONTHLY PURCHASE',
+                fontColor: 'white',
+              },
+               responsive: true,
+               maintainAspectRatio: false,
+               legend:{
+                display:true,
+                position:'top',
+                labels: {
+                  fontColor: 'white'
+                },
+              },
+             }}
+          />
+      </Paper>
+        <Paper variant="outlined" className="ind" style = {{background: "rgba(0, 0, 0, 0.85)"}}>
+          <Doughnut
+            data={this.state.chartdata}
+            options={{
+              title: {
+                display: true,
+                text: 'MONTHLY SALES',
+                fontColor: 'white',
+              },
+              responsive: true,
+              maintainAspectRatio: false,
+              legend:{
+                display:true,
+                position:'top',
+                labels: {
+                  fontColor: 'white'
+                },
+              },
+            }}
+          />
+        </Paper>
+      <Paper variant="outlined" className = "ind" style = {{background: "rgba(0, 0, 0, 0.85)"}}>
         <h2>Download reports</h2>
         <form onSubmit={this.handleSubmit}>
         <p>Enter date:</p>
@@ -131,13 +219,6 @@ class Manager extends Component {
             <FormControlLabel value="gross_income" control={<Radio />} label="Gross Income" labelPlacement="bottom"/>
           </RadioGroup>
         </FormControl><br/><br/>
-
-        {/* <select name="file" onChange={this.handleChange} value={this.state.file} required>
-          <option value="sales_report">Sales Report</option>
-          <option value="purchase_report">Purchase Report</option>
-          <option value="gross_income">Gross Income</option>
-        </select> */}
-
         <FormControl component="fieldset">
           <FormLabel component="legend">Choose type:</FormLabel>
           <RadioGroup aria-label="gender" name="format" value={this.state.format} onChange={this.handleChange} row>
@@ -146,13 +227,6 @@ class Manager extends Component {
             <FormControlLabel value="xlsx" control={<Radio />} label="XLSX" labelPlacement="bottom"/>
           </RadioGroup>
         </FormControl><br/><br/>
-
-        {/* <label htmlFor="format" >Choose file:</label>
-        <select name="format" onChange={this.handleChange} value={this.state.format} required>
-          <option value="pdf">PDF</option>
-          <option value="csv">CSV</option>
-          <option value="xlsx">XLSX</option>
-        </select> */}
 
         <Button
           name = "generate_file_submit"

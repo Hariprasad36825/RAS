@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-
+import "bootstrap/dist/css/bootstrap.min.css";
 const Expire = (props) => {
   const [visible, setVisible] = useState(true);
 

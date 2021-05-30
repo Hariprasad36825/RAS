@@ -4,21 +4,26 @@ import Alert from "./Alert";
 import Radio from "@material-ui/core/Radio";
 import RadioGroup from "@material-ui/core/RadioGroup";
 import FormControlLabel from "@material-ui/core/FormControlLabel";
-import FormControl from "@material-ui/core/FormControl";
 import FormLabel from "@material-ui/core/FormLabel";
-import Cookies from 'js-cookie'
+import Cookies from 'js-cookie';
+import Visibility from '@material-ui/icons/Visibility';
+import VisibilityOff from '@material-ui/icons/VisibilityOff';
+import InputAdornment from '@material-ui/core/InputAdornment';
+import FormControl from '@material-ui/core/FormControl'
+import IconButton from '@material-ui/core/IconButton';
+import InputLabel from '@material-ui/core/InputLabel';
+import OutlinedInput from '@material-ui/core/OutlinedInput';
+import AccountCircleIcon from '@material-ui/icons/AccountCircle';
 axios.defaults.xsrfHeaderName = "X-CSRFToken"
 axios.defaults.xsrfCookieName = 'csrftoken'
 class CreateUser extends Component {
   state = {
     email: "",
     password: "",
-    type: "clerk",
-    toggle: "far fa-eye",
-    pass_type: "password",
-    show: false,
+    type: "manager",
     message: "",
     class: "",
+    showPassword: false,
   };
   handleEmail = (e) => {
     this.setState({ email: e.target.value });
@@ -62,36 +67,61 @@ class CreateUser extends Component {
   };
   render() {
     return (
-      
-      <form onSubmit={this.handleSubmit} className="user">
-        <label>email: </label>
-        <input
-          type="email"
-          value={this.state.email}
-          placeholder="Enter email"
-          onChange={(e) => this.handleEmail(e)}
-          required
-          style={{ width: "88%" }}
+      <form onSubmit={this.handleSubmit} className="login" style = {{top : window.screen.availWidth < 780 ? "61%" : "55%"}}>
+        <img
+          src="https://png.pngtree.com/png-clipart/20190520/original/pngtree-vector-add-user-icon-png-image_4101807.jpg"
+          alt="profilepic"
+          className="avatar"
         />
-        <i className="far fa-user-circle fa-lg"></i>
-        <br></br>
-        <label>password: </label>
-        <input
-          type={this.state.pass_type}
-          placeholder="Enter Password"
-          value={this.state.password}
-          onChange={(e) => this.handlePassword(e)}
-          required
-          style={{ width: "88%", height: "50px" }}
-        />
-        <i
-          className={this.state.toggle}
-          id="togglePassword"
-          onClick={this.handleVisibility}
-        />
-        <br></br>
+        <FormControl variant="outlined">
+          <InputLabel htmlFor="outlined-adornment-password">Enter email</InputLabel>
+          <OutlinedInput onChange={(e) => this.handleEmail(e)}
+            variant="outlined"
+            margin="normal"
+            fullWidth
+            required
+            id="email"
+            label="User Name"
+            type="email"
+            autoComplete="email"
+            value={this.state.email}
+            style = {{marginBottom : "15px"}}
+            autoFocus
+            endAdornment={
+              <InputAdornment position="end">
+                <AccountCircleIcon />
+              </InputAdornment>
+            }
+          />
+        </FormControl>
+        <FormControl variant="outlined">
+          <InputLabel htmlFor="outlined-adornment-password">Password</InputLabel>
+          <OutlinedInput onChange={(e) => this.handlePassword(e)}
+            type={this.state.showPassword ? 'text' : 'password'}
+            variant="outlined"
+            margin="normal"
+            required
+            fullWidth
+            name="password"
+            label="Password"
+            id="password"
+            value={this.state.password}
+            style = {{marginBottom : "15px"}}
+            endAdornment={
+              <InputAdornment position="end">
+                <IconButton
+                  aria-label="toggle password visibility"
+                  onClick={() => this.setState({showPassword : !this.state.showPassword})}
+                  edge="end"
+                >
+                  {this.state.showPassword ? <Visibility /> : <VisibilityOff />}
+                </IconButton>
+              </InputAdornment>
+            }
+          />
+        </FormControl>
         <FormControl component="fieldset">
-          <FormLabel component="legend">TYPE:</FormLabel>
+          <FormLabel component="legend">Type</FormLabel>
           <RadioGroup
             aria-label="gender"
             name="file"
@@ -127,7 +157,7 @@ class CreateUser extends Component {
           type={this.state.class}
         />
 
-        <input type="submit" value="create User" />
+        <input type="submit" value="create User" style={{marginTop:"20px", marginLeft:"10%"}}/>
       </form>
     );
   }

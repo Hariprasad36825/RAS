@@ -42,7 +42,7 @@ class Statisticalreport extends Component {
         this.setState({ chartdata: chartdata });
       })
 
-      .catch((error) => console.log(error));
+      .catch((error) => {});
     axios({
       url:'api/GetSalesGraphPurchase',
       method:'POST',
@@ -55,44 +55,54 @@ class Statisticalreport extends Component {
         this.setState({ chartdata1: chartdata });
       })
 
-      .catch((error) => console.log(error));
+      .catch((error) => {});
   }
 
   render() {
     return (
-      <div>
       <div className="charts">
-      <Paper variant="outlined" className="ind">
+      <Paper variant="outlined" className="ind" style = {{background: "rgba(0, 0, 0, 0.85)"}}>
           <Doughnut
             data={this.state.chartdata1}
             options={{ 
               title: {
                 display: true,
-                text: 'MONTHLY PURCHASE'
+                text: 'MONTHLY PURCHASE',
+                fontColor: 'white',
               },
                responsive: true,
-               maintainAspectRatio: false
+               maintainAspectRatio: false,
+               legend:{
+                display:true,
+                position:'top',
+                labels: {
+                  fontColor: 'white'
+                },
+              },
              }}
           />
       </Paper>
-        <Paper variant="outlined" className="ind">
+        <Paper variant="outlined" className="ind" style = {{background: "rgba(0, 0, 0, 0.85)"}}>
           <Doughnut
             data={this.state.chartdata}
             options={{
               title: {
                 display: true,
-                text: 'MONTHLY SALES'
+                text: 'MONTHLY SALES',
+                fontColor: 'white',
               },
               responsive: true,
               maintainAspectRatio: false,
               legend:{
                 display:true,
-                position:'top'
+                position:'top',
+                labels: {
+                  fontColor: 'white'
+                },
               },
             }}
           />
         </Paper>
-      </div>
       </div>
     );
   }

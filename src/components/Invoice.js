@@ -1,8 +1,10 @@
 import axios from "axios";
 import React, { Component } from "react";
 import printJS from "print-js";
-import "./Addfooditems.css";
-import Cookies from 'js-cookie'
+import Cookies from 'js-cookie';
+import DeleteIcon from '@material-ui/icons/Delete';
+import AddCircleIcon from '@material-ui/icons/AddCircle';
+import {FormControl, FormLabel, RadioGroup, FormControlLabel, Radio, InputLabel, OutlinedInput, Select, MenuItem, Button} from '@material-ui/core';
 axios.defaults.xsrfHeaderName = "X-CSRFToken"
 axios.defaults.xsrfCookieName = 'csrftoken'
 
@@ -35,7 +37,7 @@ class Invoice extends Component {
         }
       })
 
-      .catch((error) => console.log(error));
+      .catch((error) => {});
   };
 
   componentDidMount() {
@@ -98,7 +100,6 @@ class Invoice extends Component {
   };
 
   handlesubmit = (event) => {
-    console.log(this.state)
     const csrftoken = Cookies.get('csrftoken')
     axios({
       url:'api/GenerateInvoice',
@@ -117,101 +118,85 @@ class Invoice extends Component {
 
   render() {
     return (
-      <div className="addfood">
-        <h1 className="title">Invoice</h1>
-        <div>
-          <form onSubmit={this.handlesubmit} className="contact-form row">
+      <div>
+        <form onSubmit={this.handlesubmit} className="login" style={{marginTop: window.screen.availWidth < 1200 ? "5%" : "1%", width: window.screen.availWidth < 1400 ? "95%" : "30%",overflowY: "scroll"}}>
+          <h1 className="title">Invoice</h1>
             {this.state.nameList.map((name, index) => {
               return (
+                
                 <div key={index} className="dropdowns form-field col-12">
-                  <label>
-                    {console.log(this.state.nameList[index])}
-                    ingredient name:
-                    <select
+                  <FormControl variant="outlined" style = {{width:"100%", marginRight: "5px", marginBottom: "5%"}}>
+                    <InputLabel id="demo-simple-select-outlined-label">Ingredient</InputLabel>
+                    <Select
+                      labelId="demo-simple-select-outlined-label"
                       id={index}
                       value={this.state.nameList[index]}
-                      onChange={(event) => {
-                        this.handleName(event, index);
-                      }}
+                      onChange={(event) => {this.handleName(event, index)}}
+                      label="Age"
+                      overflow = "hidden"
                     >
+                      <MenuItem value="">
+                        <em>None</em>
+                      </MenuItem>
                       {this.state.availablefood
                         .filter(this.checkAvailable(index))
-                        .map((item, i) => {
-                          return (
-                            <option key={index * 1000 + i} value={item}>
-                              {item.toString().toUpperCase()}
-                            </option>
-                          );
-                        })}
-                    </select>
-                  </label>
-
-                  <label>
-                    quantity:
-                    <input
-                      type="number"
-                      name="quantity"
-                      value={this.state.quantityList[index]}
-                      onChange={(event) => {
-                        this.handleQuantity(event, index);
-                      }}
-                      step="any"
-                      min="0.0001"
-                      required
-                    />
-                  </label>
-                  {index !== 0 && (
-                    <button
-                      type="button"
-                      className="removebtn"
-                      onClick={() => this.handledelete(index)}
-                    >
-                      <i class="fa fa-trash" />
-                    </button>
-                  )}
-
-                  <br />
-                  <br />
-                  <br />
-                  <br />
-                  <br />
-
-                  <label className="label">
-                    ingredientprice:
-                    <input
-                      name="price"
-                      type="number"
-                      value={this.state.priceList[index]}
-                      onChange={(event) => {
-                        this.handleprice(event, index);
-                      }}
-                      min="0"
-                      step="any"
-                    ></input>
-                  </label>
+                        .map((item, i) => (
+                          <MenuItem key={index * 1000 + i} value={item}>{item.toString().toUpperCase()}</MenuItem>
+                        ))}
+                    </Select>
+                  </FormControl>
+                  <div style={{display:"flex", justifyContent: "space-between"}}>
+                    <FormControl variant="outlined">
+                      <InputLabel htmlFor="outlined-adornment-password">Quantity</InputLabel>
+                      <OutlinedInput onChange={(event) => {this.handleQuantity(event, index);}}
+                        variant="outlined"
+                        margin="normal"
+                        fullWidth
+                        required
+                        id="quantity"
+                        label="quantity"
+                        type="number"
+                        autoComplete="number"
+                        step="any"
+                        min="0.0001"
+                        overflow = "hidden"
+                        value={this.state.quantityList[index]}
+                        style = {{width:"100%", marginRight: "5px"}}
+                      />
+                    </FormControl>
+                    <FormControl variant="outlined">
+                      <InputLabel htmlFor="outlined-adornment-password">Price</InputLabel>
+                      <OutlinedInput onChange={(event) => {this.handleprice(event, index);}}
+                        variant="outlined"
+                        margin="normal"
+                        fullWidth
+                        required
+                        id="Ingredient Price"
+                        label="Ingredient Price"
+                        type="number"
+                        autoComplete="number"
+                        step="any"
+                        min="0.1"
+                        overflow = "hidden"
+                        value={this.state.priceList[index]}
+                        style = {{width:"100%", marginRight: "15px", marginBottom:"15px", marginLeft:'5px'}}
+                      />
+                    </FormControl>
+                    <DeleteIcon style = {{color:"red", fontSize: "30px", marginLeft:'5px'}} onClick={() => this.handledelete(index)}/>
+                  </div>
                 </div>
               );
             })}
-            <div className="form-field col-lg-12">
-              <button
-                className="add-btn"
-                type="button"
-                onClick={(e) => this.handleadd(e)}
-              >
-                add
-              </button>
-            </div>
-            <div className="form-field col-lg-12">
-              <div className="container">
-                <input
-                  className="submit-btn"
-                  type="submit"
-                  value="genarate cheque"
-                />
-              </div>
-            </div>
-          </form>
-        </div>
+            <Button onClick={(e) => this.handleadd(e)} variant="contained" style = {{backgroundColor: "green", color : "white", marginBottom:"15px"}}>
+              <AddCircleIcon/>{" Add Ingredient"}
+            </Button>
+            <input
+              className="submit-btn"
+              type="submit"
+              value="genarate cheque"
+              style = {{width: "70%", marginLeft:"15%", marginBottom: "15px", marginTop:"20px"}}
+            />
+        </form>
       </div>
     );
   }
