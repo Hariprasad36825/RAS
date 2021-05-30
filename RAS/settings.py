@@ -26,7 +26,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = '6@8b!0pwhj8l%4=o0@@2g5m+^$w60#6+2x#6=eb)4i!o#_**z5'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['restaurant-automation-system.herokuapp.com', 'localhost']
 
