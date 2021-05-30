@@ -2,6 +2,7 @@ from django.http.response import JsonResponse
 from django.shortcuts import render
 import hashlib as hb
 import random
+from numpy import select
 from rest_framework import viewsets
 from .serializers import *
 from .models import *
@@ -520,8 +521,13 @@ def Create_Pdf(request):
 def get_chart_sales(request):
 
     if(request.method=='POST'):
-        x=list(my_custom_sql("select Food.name, sum(quantity) from sales join Food on (Food.item_code = sales.item_code) Where (Food.isvisible = 1 AND sales.DATE >= date(date('now','localtime'), '-1 month')) group by Food.item_code"))
-        amt = my_custom_sql("select sum(price) from purchase where (DATE >= date(date('now','localtime'), '-1 month'))")
+        # x=list(my_custom_sql("select Food.name, sum(quantity) from sales join Food on (Food.item_code = sales.item_code) Where (Food.isvisible = 1 AND sales.DATE >= date(date('now','localtime'), '-1 month')) group by Food.item_code"))
+        # print(x)
+        # amt = my_custom_sql("select sum(price) from purchase where (DATE >= date(date('now','localtime'), '-1 month'))")
+        # print(amt)
+        x= list(Food.objects.filter(isvisible = 1, sales__date__gte = datetime.now() - timedelta(days = 30)).annotate(quan = Sum('sales__quantity')).values_list('name', 'quan'))
+        amt = sum(list(Purchase.objects.filter(date__gte = datetime.now() - timedelta(days = 30)).values_list('price', flat=True)))
+        # print(x)
         color = []
         labels, data = zip(*x)
         labels = list(labels)
@@ -535,16 +541,19 @@ def get_chart_sales(request):
             else:
                 continue
     
-        return Response({"labels":labels,"datasets":[{"label":"Amount Spent = {}".format(*amt[0]),"data":data, "backgroundColor": color
+        return Response({"labels":labels,"datasets":[{"label":"Amount Spent = {}".format(amt),"data":data, "backgroundColor": color
             ,}]})  
 
 @api_view(['POST'])
 def get_chart_purchase(request):
 
     if(request.method=='POST'):
-        x=list(my_custom_sql("select inventory.name, sum(Purchase.QUANTITY) from purchase join Inventory on (Inventory.ingredient_id = purchase.INGREDIENT_ID) where (DATE >= date(date('now','localtime'), '-1 month')) group by Inventory.ingredient_id"))
-        amt = my_custom_sql("select sum(price) from purchase where (DATE >= date(date('now','localtime'), '-1 month'))")
-        # print(amt)
+        # x=list(my_custom_sql("select inventory.name, sum(Purchase.QUANTITY) from purchase join Inventory on (Inventory.ingredient_id = purchase.INGREDIENT_ID) where (DATE >= date(date('now','localtime'), '-1 month')) group by Inventory.ingredient_id"))
+        # amt = my_custom_sql("select sum(price) from purchase where (DATE >= date(date('now','localtime'), '-1 month'))")
+        # print(x)
+        x= list(Inventory.objects.filter(purchase__date__gte = datetime.now() - timedelta(days = 30)).annotate(quan = Sum('purchase__quantity')).values_list('name', 'quan'))
+        amt = sum(list(Purchase.objects.filter(date__gte = datetime.now() - timedelta(days = 30)).values_list('price', flat=True)))
+        print(x)
         color = []
         labels, data = zip(*x)
         # print(labels, data)
@@ -579,11 +588,13 @@ def update_price(request):
 @api_view(['POST'])
 def GetFoodsForClerk(request):
     try:
-        # print(request.data)
+        #print(request.data)
         
-        query = 'select UPPER(name), price, image, item_code from food where (isvisible = 1 AND (name like "%{}%" OR food.item_code like "%{}%"))'.format(request.data["val"],request.data["val"])
-        # print(query)
-        result = list(my_custom_sql(query))   
+        # query = 'select UPPER(name), price, image, item_code from food where (isvisible = 1 AND (name like "%{}%" OR food.item_code like "%{}%"))'.format(request.data["val"],request.data["val"])
+        # # print(query)
+        # result = list(my_custom_sql(query))   
+        result = list(Food.objects.filter(Q(name__contains = request.data["val"]) | Q(item_code__contains = request.data["val"])).filter(isvisible = 1).values_list('name','price','image','item_code'))
+        # print(result)
         # print(result)
         return Response(result)
     except:
@@ -781,7 +792,7 @@ def bill_generator(request):
             #print("select count(*) from sales where (item_code = {} && date >= {});".format(item[3], str((datetime.today() - timedelta(days=3)).strftime("%Y-%d,%Y"))))
             # count = my_custom_sql("select count(*) from sales where (item_code = {} && date >= {});".format(item[3], str((datetime.today() - timedelta(days=3)).strftime("%Y-%m-%d"))))[0][0]
                 
-        variable = Variable.objects.get(pk=11)
+        variable = Variable.objects.get(pk=1)
         variable.balance = balance
         variable.save()
         filename = "invoice"+str(bill_no)+".pdf"
@@ -852,7 +863,7 @@ def get_Invoice(request):
             ingredientsList[i] = str(ingredientsdict[ingredientsList[i]])
         """ balance=list(my_custom_sql("select balance from variable"))
         balance=list(itertools.chain(*balance)) """
-        balance = Variable.objects.get(pk = 11)
+        balance = Variable.objects.get(pk = 1)
         actbal=balance.balance
         ingredientsList=[int(i) for i in ingredientsList]
         quantityList=[float(i) for i in quantityList]
@@ -885,7 +896,7 @@ def get_Invoice(request):
             actbal=actbal-gndprice
             #print(actbal)
             #my_custom_sql('update variable SET balance={}'.format(actbal))
-            balance = Variable.objects.get(pk = 11)
+            balance = Variable.objects.get(pk = 1)
             balance.balance = actbal
             balance.save()
             for i in range(len(ingredientsList)):
@@ -909,10 +920,11 @@ def get_Invoice(request):
 
 @api_view(['POST'])
 def get_complement(request):
-    query = "select name from food where food.isvisible = 0"
-    result = list(my_custom_sql(query))
+    # query = "select name from food where food.isvisible = 0"
+    # result = list(my_custom_sql(query))
+    result = list(Food.objects.filter(isvisible = 0).values_list('name'))
     result = [i[0] for i in result]
-    # print(result)
+    #print(result)
     return Response(result)
 
 
