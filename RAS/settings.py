@@ -78,23 +78,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'RAS.wsgi.application'
 
-
-# Database
-# https://docs.djangoproject.com/en/3.1/ref/settings/#databases
-
-''' DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'RAS',
-        'USER': 'root',
-        'PASSWORD': 'Mysql@hari#2001',
-        'HOST': '127.0.0.1',
-        
-        'PORT': '3306',
-    }
-} '''
-
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -153,11 +136,9 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'build/static'),
 ]
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
 
 CORS_ORIGIN_WHITELIST = [
-     'http://localhost:8000',
-     'http://127.0.0.1:8000',
 ]
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
