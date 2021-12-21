@@ -14,7 +14,7 @@ from pathlib import Path
 import os
 import dj_database_url
 import django_heroku
-
+import dropbox
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'Restaurant.apps.RestaurantConfig',
     'corsheaders',
     'rest_framework',
+    'storages',
 ]
 
 MIDDLEWARE = [
@@ -63,7 +64,7 @@ ROOT_URLCONF = 'RAS.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'build'),os.path.join(BASE_DIR, 'staticfiles')],
+        'DIRS': [os.path.join(BASE_DIR, 'build'), os.path.join(BASE_DIR, 'staticfiles')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -146,7 +147,7 @@ CORS_ORIGIN_WHITELIST = [
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_HOST_USER = 'forpythonmail@gmail.com'
-EMAIL_HOST_PASSWORD = 'pwqzryryolpbgits' #past the key or password app here
+EMAIL_HOST_PASSWORD = 'pwqzryryolpbgits'  # past the key or password app here
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 DEFAULT_FROM_EMAIL = 'default from email'
@@ -201,3 +202,6 @@ LOGGING = {
 }
 
 DEBUG_PROPAGATE_EXCEPTIONS = True
+
+DROPBOX_OAUTH2_TOKEN = 'sl.A-PB-1jSWk_sjBd_sp7ZhLhndTFcPEjIcm_eDdKFHWzPY5lktUn90sm_9rDy5A7jlNncNBgBV99la2z0zx2_qFLSSANFkSfYJ8VBZNVXoXtzHL3KgyG7RrgXuyWEuNGHjM5OYL4'
+DROPBOX_ROOT_PATH = '/'

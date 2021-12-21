@@ -22,10 +22,10 @@ from Restaurant import views
 from .views import index
 from django.views.generic import TemplateView
 
- 
+
 urlpatterns = [
-    path('',TemplateView.as_view(template_name='index.html')),
-    #path('ForgotPassword/',TemplateView.as_view(template_name='./build/index.html')),
+    path('', TemplateView.as_view(template_name='index.html')),
+    # path('ForgotPassword/',TemplateView.as_view(template_name='./build/index.html')),
     path('admin/', admin.site.urls),
     path('api/', include('Restaurant.urls')),
-]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+]
